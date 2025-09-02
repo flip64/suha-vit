@@ -72,7 +72,7 @@ const SingleProductArea = () => {
               {product.images?.length > 0 && (
                 <img
                   src={product.images[0].image}
-                  alt={product.name}
+                  alt={product.images[0].alt_text}
                   style={{ maxWidth: "250px" }}
                 />
               )}
@@ -179,3 +179,4 @@ const SingleProductArea = () => {
 };
 
 export default SingleProductArea;
+
