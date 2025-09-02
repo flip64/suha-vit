@@ -1,26 +1,20 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import VideoPopup from "../../modals/VideoPopup";
 
-const ProductSlider = () => {
-  const { slug } = useParams();
-  const [product, setProduct] = useState<any | null>(null);
+interface ProductSliderProps {
+  product: any; // محصول شامل images و videoId
+}
+
+const ProductSlider = ({ product }: ProductSliderProps) => {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  useEffect(() => {
-    if (!slug) return;
-
-    fetch(`https://backend.bazbia.ir/api/products/${slug}/`)
-      .then(res => res.json())
-      .then(data => setProduct(data))
-      .catch(err => console.error(err));
-  }, [slug]);
-
-  if (!product || !product.images?.length) return <p>در حال بارگذاری تصاویر...</p>;
+  if (!product || !product.images?.length) {
+    return <p>در حال بارگذاری تصاویر...</p>;
+  }
 
   return (
     <>
