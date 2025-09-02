@@ -69,13 +69,26 @@ const SingleProductArea = () => {
               <h3>{product.name}</h3>
               <p>{product.description}</p>
 
-              {product.images?.length > 0 && (
-                <img
-                  src={product.images[0].image}
-                  alt={product.images[0].alt_text}
-                  style={{ maxWidth: "250px" }}
-                />
-              )}
+                 {product.images?.length > 0 && (
+                 <Swiper
+                 loop={true}
+                 slidesPerView={1}
+                 spaceBetween={10}
+                 autoplay={{ delay: 3000, disableOnInteraction: false }}
+                 modules={[Autoplay]}
+                 className="product-image-gallery"
+                  >
+                  {product.images.map((img: any, index: number) => (
+                   <SwiperSlide key={index}>
+                    <img
+                     src={img.image}
+                     alt={img.alt_text || product.name}
+                     style={{ maxWidth: "300px" }}
+                      />
+                    </SwiperSlide>
+                    ))}
+                  </Swiper>
+                )}
 
               <p className="sale-price">{product.base_price} تومان</p>
 
@@ -179,4 +192,5 @@ const SingleProductArea = () => {
 };
 
 export default SingleProductArea;
+
 
