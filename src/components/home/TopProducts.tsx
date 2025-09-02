@@ -47,7 +47,7 @@ const TopProducts = () => {
                       <img className="mb-2" src={item.images[0]} alt={item.title} />
                     </a>
                     <a className="product-title" href="/single-product">
-                      {item.title}
+                      {item.name}
                     </a>
                     <p className="sale-price">
                       $ {item.new_price}
@@ -75,4 +75,5 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
+
 
