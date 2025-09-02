@@ -1,121 +1,52 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Autoplay } from "swiper/modules"; 
 import { Swiper, SwiperSlide } from "swiper/react";
-import VideoPopup from "../../modals/VideoPopup"; 
+import VideoPopup from "../../modals/VideoPopup";
 
-const SingleProductArea = () => {
-  const { slug } = useParams(); // ✅ گرفتن slug از لینک
+interface SingleProductAreaProps {
+  product: any; // محصول شامل images, name, description, base_price و غیره
+  related?: any[]; // اختیاری: می‌تونی لیست محصولات مرتبط هم پاس بدی
+}
+
+const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) => {
   const [quantity, setQuantity] = useState(1);
   const increment = () => setQuantity(quantity + 1);
   const decrement = () => quantity > 1 && setQuantity(quantity - 1);
 
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
 
-  // ✅ محصول اصلی
-  const [product, setProduct] = useState<any | null>(null);
-  const [loadingProduct, setLoadingProduct] = useState(true);
-
-  // ✅ محصولات مرتبط
-  const [related, setRelated] = useState<any[]>([]);
-  const [loadingRelated, setLoadingRelated] = useState(true);
-
-  // فچ محصول اصلی بر اساس slug
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`https://backend.bazbia.ir/api/products/${slug}/`);
-        const data = await res.json();
-        setProduct(data);
-      } catch (error) {
-        console.error("خطا در گرفتن محصول:", error);
-      } finally {
-        setLoadingProduct(false);
-      }
-    };
-
-    if (slug) {
-      fetchProduct();
-    }
-  }, [slug]);
-
-  // فچ محصولات مرتبط (فعلاً همه محصولات → بعداً می‌تونی فیلتر بزنی)
-  useEffect(() => {
-    const fetchRelated = async () => {
-      try {
-        const res = await fetch("https://backend.bazbia.ir/api/products/");
-        const data = await res.json();
-        setRelated(data.results || data);
-      } catch (error) {
-        console.error("خطا در گرفتن محصولات مرتبط:", error);
-      } finally {
-        setLoadingRelated(false);
-      }
-    };
-
-    fetchRelated();
-  }, []);
-
   return (
     <>
       <div className="product-description pb-3">
         <div className="container">
-          {loadingProduct ? (
-            <p>در حال بارگذاری محصول...</p>
-          ) : product ? (
-            <>
-              <h3>{product.name}</h3>
-              <p>{product.description}</p>
+          <h3>{product.name}</h3>
+          <p>{product.description}</p>
 
-                 {product.images?.length > 0 && (
-                 <Swiper
-                 loop={true}
-                 slidesPerView={1}
-                 spaceBetween={10}
-                 autoplay={{ delay: 3000, disableOnInteraction: false }}
-                 modules={[Autoplay]}
-                 className="product-image-gallery"
-                  >
-                  {product.images.map((img: any, index: number) => (
-                   <SwiperSlide key={index}>
-                    <img
-                     src={img.image}
-                     alt={img.alt_text || product.name}
-                     style={{ maxWidth: "300px" }}
-                      />
-                    </SwiperSlide>
-                    ))}
-                  </Swiper>
-                )}
+          
 
-              <p className="sale-price">{product.base_price} تومان</p>
+          <p className="sale-price">{product.base_price} تومان</p>
 
-              <div className="quantity-control d-flex align-items-center">
-                <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
-                <span className="px-2">{quantity}</span>
-                <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
-              </div>
-            </>
-          ) : (
-            <p>محصولی پیدا نشد.</p>
-          )}
+          <div className="quantity-control d-flex align-items-center">
+            <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
+            <span className="px-2">{quantity}</span>
+            <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
+          </div>
         </div>
 
-        {/* بخش محصولات مرتبط */}
-        <div className="related-product-wrapper bg-white py-3 mb-3">
-          <div className="container">
-            <div className="section-heading d-flex align-items-center justify-content-between rtl-flex-d-row-r">
-              <h6>Related Products</h6>
-              <Link className="btn btn-sm btn-secondary" to="/shop-grid">
-                View all
-              </Link>
-            </div>
+        {/* محصولات مرتبط */}
+        {related.length > 0 && (
+          <div className="related-product-wrapper bg-white py-3 mb-3">
+            <div className="container">
+              <div className="section-heading d-flex align-items-center justify-content-between rtl-flex-d-row-r">
+                <h6>Related Products</h6>
+                <Link className="btn btn-sm btn-secondary" to="/shop-grid">
+                  View all
+                </Link>
+              </div>
 
-            {loadingRelated ? (
-              <p>در حال بارگذاری محصولات مرتبط...</p>
-            ) : (
               <Swiper
                 loop={true}
                 slidesPerView={2}
@@ -132,11 +63,7 @@ const SingleProductArea = () => {
                           <i className="ti ti-heart"></i>
                         </a>
 
-                        {/* لینک‌ها بر اساس slug */}
-                        <Link
-                          className="product-thumbnail d-block"
-                          to={`/single-product/${item.slug}`}
-                        >
+                        <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
                           {item.images?.[0]?.image && (
                             <img
                               className="mb-2"
@@ -146,10 +73,7 @@ const SingleProductArea = () => {
                           )}
                         </Link>
 
-                        <Link
-                          className="product-title"
-                          to={`/single-product/${item.slug}`}
-                        >
+                        <Link className="product-title" to={`/single-product/${item.slug}`}>
                           {item.name}
                         </Link>
 
@@ -170,29 +94,25 @@ const SingleProductArea = () => {
                   </SwiperSlide>
                 ))}
               </Swiper>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* بخش Reviews و Submit Form → همون کد اصلیت */}
+        {/* بخش Reviews */}
         <div className="container">
           <h5>Reviews</h5>
           <p>بخش نظرات محصول اینجاست...</p>
         </div>
       </div>
 
-      {/* video modal */}
+      {/* Video modal */}
       <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
-        videoId={"-hTVNidxg2s"}
+        videoId={product.videoId || "-hTVNidxg2s"}
       />
     </>
   );
 };
 
 export default SingleProductArea;
-
-
-
-
