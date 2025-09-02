@@ -51,7 +51,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import HomePage from "./components/HomePage";  
 
 const router = createBrowserRouter([
-  { path: "/", element: <MainHome />, errorElement: <CustomError /> },
+  { path: "/", element: <HomePage />, errorElement: <CustomError /> },
   { path: "/intro", element: <Intro />, errorElement: <CustomError /> },
   { path: "/login", element: <Login />, errorElement: <CustomError /> },
   { path: "/home", element: <HomePage />, errorElement: <CustomError /> },
