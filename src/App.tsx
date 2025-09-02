@@ -61,7 +61,7 @@ const router = createBrowserRouter([
   { path: "/pages", element: <Pages />, errorElement: <CustomError /> },
   { path: "/shop-grid", element: <ShopGrid />, errorElement: <CustomError /> },
   { path: "/shop-list", element: <ShopList />, errorElement: <CustomError /> },
-  { path: "/single-product", element: <SingleProduct />, errorElement: <CustomError /> },
+  { path: "/single-product/:slug", element: <SingleProduct />, errorElement: <CustomError /> },
   { path: "/catagory", element: <Catagory />, errorElement: <CustomError /> },
   { path: "/sub-catagory", element: <SubCatagory />, errorElement: <CustomError /> },
   { path: "/wishlist-grid", element: <WishlistGrid />, errorElement: <CustomError /> },
