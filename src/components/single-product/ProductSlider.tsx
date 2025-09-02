@@ -1,57 +1,60 @@
-
-"use client"; 
+"use client";
 import { useState } from "react";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import VideoPopup from "../../modals/VideoPopup";
 
+interface ProductSliderProps {
+  product: any; // محصولی که شامل images: [{image, alt_text}] هست
+}
 
-
-const ProductSlider = () => {
-
+const ProductSlider = ({ product }: ProductSliderProps) => {
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
 
-
+  if (!product || !product.images?.length) {
+    return <p>تصویری برای نمایش موجود نیست.</p>;
+  }
 
   return (
     <>
       <div className="product-slide-wrapper">
-
         <Swiper
           loop={true}
-          autoplay={true}
+          autoplay={{ delay: 3000, disableOnInteraction: false }}
           modules={[Autoplay]}
-
-          className="product-slides owl-carousel">
-
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/6.jpg)` }}></SwiperSlide>
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/10.jpg)` }}></SwiperSlide>
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/11.jpg)` }}></SwiperSlide>
-
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/6.jpg)` }}></SwiperSlide>
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/10.jpg)` }}></SwiperSlide>
-          <SwiperSlide className="single-product-slide" style={{ backgroundImage: `url(/assets/img/bg-img/11.jpg)` }}></SwiperSlide>
-
+          className="product-slides owl-carousel"
+        >
+          {product.images.map((img: any, index: number) => (
+            <SwiperSlide
+              key={index}
+              className="single-product-slide"
+              style={{
+                backgroundImage: `url(${img.image})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "400px",
+              }}
+            ></SwiperSlide>
+          ))}
         </Swiper>
-
 
         <a
           className="video-btn shadow-sm"
           id="singleProductVideoBtn"
           onClick={() => setIsVideoOpen(true)}
-          style={{ cursor: "pointer" }}>
+          style={{ cursor: "pointer" }}
+        >
           <i className="ti ti-player-play"></i>
         </a>
       </div>
 
-      {/* video modal start */}
+      {/* video modal */}
       <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
-        videoId={"-hTVNidxg2s"}
+        videoId={product.videoId || "-hTVNidxg2s"} // می‌تونی از product.videoId استفاده کنی
       />
-      {/* video modal end  */}
-
     </>
   );
 };
