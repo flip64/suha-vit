@@ -42,11 +42,11 @@ const TopProducts = () => {
                     </a>
                     <a
                       className="product-thumbnail d-block"
-                      href="/single-product/{item.slug}"
+                      href="/single-product/${item.slug}"
                     >
                       <img className="mb-2" src={item.thumb} alt={item.name} />
                     </a>
-                    <a className="product-title" href="/single-product/{item.slug}">
+                    <a className="product-title" href="/single-product/${item.slug}">
                       {item.name}
                     </a>
                     <p className="sale-price">
@@ -75,6 +75,7 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
+
 
 
 
