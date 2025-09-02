@@ -1,20 +1,26 @@
 "use client";
-import { useState } from "react";
-import { Autoplay } from "swiper/modules";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import VideoPopup from "../../modals/VideoPopup";
 
-interface ProductSliderProps {
-  product: any; // محصولی که شامل images: [{image, alt_text}] هست
-}
+const ProductSlider = () => {
+  const { slug } = useParams();
+  const [product, setProduct] = useState<any | null>(null);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-const ProductSlider = ({ product }: ProductSliderProps) => {
-  const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
+  useEffect(() => {
+    if (!slug) return;
 
-  if (!product || !product.images?.length) {
-    return <p>تصویری برای نمایش موجود نیست.</p>;
-  }
+    fetch(`https://backend.bazbia.ir/api/products/${slug}/`)
+      .then(res => res.json())
+      .then(data => setProduct(data))
+      .catch(err => console.error(err));
+  }, [slug]);
+
+  if (!product || !product.images?.length) return <p>در حال بارگذاری تصاویر...</p>;
 
   return (
     <>
@@ -35,13 +41,12 @@ const ProductSlider = ({ product }: ProductSliderProps) => {
                 backgroundPosition: "center",
                 height: "400px",
               }}
-            ></SwiperSlide>
+            />
           ))}
         </Swiper>
 
         <a
           className="video-btn shadow-sm"
-          id="singleProductVideoBtn"
           onClick={() => setIsVideoOpen(true)}
           style={{ cursor: "pointer" }}
         >
@@ -49,11 +54,10 @@ const ProductSlider = ({ product }: ProductSliderProps) => {
         </a>
       </div>
 
-      {/* video modal */}
       <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
-        videoId={product.videoId || "-hTVNidxg2s"} // می‌تونی از product.videoId استفاده کنی
+        videoId={product.videoId || "-hTVNidxg2s"}
       />
     </>
   );
