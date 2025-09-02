@@ -40,17 +40,21 @@ const TopProducts = () => {
                     <a className="wishlist-btn" href="#">
                       <i className="ti ti-heart"></i>
                     </a>
+                    {/* لینک single-product اصلاح شد */}
                     <a
                       className="product-thumbnail d-block"
-                      href="/single-product/${item.slug}"
+                      href={`/single-product/${item.slug}`}
                     >
                       <img className="mb-2" src={item.thumb} alt={item.name} />
                     </a>
-                    <a className="product-title" href="/single-product/${item.slug}">
+                    <a
+                      className="product-title"
+                      href={`/single-product/${item.slug}`}
+                    >
                       {item.name}
                     </a>
                     <p className="sale-price">
-                      {item.base_price-5000} تومان 
+                      {item.base_price - 5000} تومان 
                       <span>{item.base_price}</span>  
                     </p>
                     <div className="product-rating">
@@ -75,11 +79,3 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
-
-
-
-
-
-
-
-
