@@ -1,25 +1,96 @@
 "use client";
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Autoplay } from "swiper/modules"; 
 import { Swiper, SwiperSlide } from "swiper/react";
 import VideoPopup from "../../modals/VideoPopup"; 
-import top_product from "../../data/top_product";
-import reviews_data from "../../data/reviews_data";
 
 const SingleProductArea = () => {
-  const [quantity, setQuantity] = useState(3);
+  const { slug } = useParams(); // ✅ گرفتن slug از لینک
+  const [quantity, setQuantity] = useState(1);
   const increment = () => setQuantity(quantity + 1);
   const decrement = () => quantity > 1 && setQuantity(quantity - 1);
 
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
 
+  // ✅ محصول اصلی
+  const [product, setProduct] = useState<any | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
+
+  // ✅ محصولات مرتبط
+  const [related, setRelated] = useState<any[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(true);
+
+  // فچ محصول اصلی بر اساس slug
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`https://backend.bazbia.ir/api/products/${slug}/`);
+        const data = await res.json();
+        setProduct(data);
+      } catch (error) {
+        console.error("خطا در گرفتن محصول:", error);
+      } finally {
+        setLoadingProduct(false);
+      }
+    };
+
+    if (slug) {
+      fetchProduct();
+    }
+  }, [slug]);
+
+  // فچ محصولات مرتبط (فعلاً همه محصولات → بعداً می‌تونی فیلتر بزنی)
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        const res = await fetch("https://backend.bazbia.ir/api/products/");
+        const data = await res.json();
+        setRelated(data.results || data);
+      } catch (error) {
+        console.error("خطا در گرفتن محصولات مرتبط:", error);
+      } finally {
+        setLoadingRelated(false);
+      }
+    };
+
+    fetchRelated();
+  }, []);
+
   return (
     <>
       <div className="product-description pb-3">
-        {/* … بقیه بخش‌های محصول همان کد اصلی … */}
+        <div className="container">
+          {loadingProduct ? (
+            <p>در حال بارگذاری محصول...</p>
+          ) : product ? (
+            <>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
 
+              {product.images?.length > 0 && (
+                <img
+                  src={product.images[0].image}
+                  alt={product.name}
+                  style={{ maxWidth: "250px" }}
+                />
+              )}
+
+              <p className="sale-price">{product.base_price} تومان</p>
+
+              <div className="quantity-control d-flex align-items-center">
+                <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
+                <span className="px-2">{quantity}</span>
+                <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
+              </div>
+            </>
+          ) : (
+            <p>محصولی پیدا نشد.</p>
+          )}
+        </div>
+
+        {/* بخش محصولات مرتبط */}
         <div className="related-product-wrapper bg-white py-3 mb-3">
           <div className="container">
             <div className="section-heading d-flex align-items-center justify-content-between rtl-flex-d-row-r">
@@ -28,64 +99,73 @@ const SingleProductArea = () => {
                 View all
               </Link>
             </div>
-            <Swiper
-              loop={true}
-              slidesPerView={2}
-              spaceBetween={10}
-              autoplay={true}
-              modules={[Autoplay]}
-              className="related-product-slide owl-carousel"
-            >
-              {top_product.map((item, i) => (
-                <SwiperSlide key={i} className="col-6 col-md-4">
-                  <div className="card product-card">
-                    <div className="card-body">
-                      <span className={`badge rounded-pill badge-${item.badge_color}`}>
-                        {item.badge_text}
-                      </span>
-                      <a className="wishlist-btn" href="#">
-                        <i className="ti ti-heart"></i>
-                      </a>
 
-                      {/* لینک‌ها بر اساس slug هر محصول */}
-                      <Link
-                        className="product-thumbnail d-block"
-                        to={`/single-product/${item.slug}`}
-                      >
-                        <img className="mb-2" src={item.img} alt={item.title} />
-                      </Link>
+            {loadingRelated ? (
+              <p>در حال بارگذاری محصولات مرتبط...</p>
+            ) : (
+              <Swiper
+                loop={true}
+                slidesPerView={2}
+                spaceBetween={10}
+                autoplay={{ delay: 2500, disableOnInteraction: false }}
+                modules={[Autoplay]}
+                className="related-product-slide owl-carousel"
+              >
+                {related.map((item: any) => (
+                  <SwiperSlide key={item.slug} className="col-6 col-md-4">
+                    <div className="card product-card">
+                      <div className="card-body">
+                        <a className="wishlist-btn" href="#">
+                          <i className="ti ti-heart"></i>
+                        </a>
 
-                      <Link
-                        className="product-title"
-                        to={`/single-product/${item.slug}`}
-                      >
-                        {item.title}
-                      </Link>
+                        {/* لینک‌ها بر اساس slug */}
+                        <Link
+                          className="product-thumbnail d-block"
+                          to={`/single-product/${item.slug}`}
+                        >
+                          {item.images?.[0]?.image && (
+                            <img
+                              className="mb-2"
+                              src={item.images[0].image}
+                              alt={item.name}
+                            />
+                          )}
+                        </Link>
 
-                      <p className="sale-price">
-                        $ {item.new_price}
-                        <span>$ {item.old_price}</span>
-                      </p>
+                        <Link
+                          className="product-title"
+                          to={`/single-product/${item.slug}`}
+                        >
+                          {item.name}
+                        </Link>
 
-                      <div className="product-rating">
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
+                        <p className="sale-price">{item.base_price} تومان</p>
+
+                        <div className="product-rating">
+                          <i className="ti ti-star-filled"></i>
+                          <i className="ti ti-star-filled"></i>
+                          <i className="ti ti-star-filled"></i>
+                          <i className="ti ti-star-filled"></i>
+                          <i className="ti ti-star-filled"></i>
+                        </div>
+                        <a className="btn btn-primary btn-sm" href="#">
+                          <i className="ti ti-plus"></i>
+                        </a>
                       </div>
-                      <a className="btn btn-primary btn-sm" href="#">
-                        <i className="ti ti-plus"></i>
-                      </a>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
           </div>
         </div>
 
-        {/* … بقیه بخش‌های Reviews و Submit Form همان کد اصلی … */}
+        {/* بخش Reviews و Submit Form → همون کد اصلیت */}
+        <div className="container">
+          <h5>Reviews</h5>
+          <p>بخش نظرات محصول اینجاست...</p>
+        </div>
       </div>
 
       {/* video modal */}
