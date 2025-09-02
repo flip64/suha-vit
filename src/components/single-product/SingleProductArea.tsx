@@ -182,15 +182,12 @@ const SingleProductArea = () => {
       </div>
 
       {/* video modal */}
-      <VideoPopup
-        isVideoOpen={isVideoOpen}
-        setIsVideoOpen={setIsVideoOpen}
-        videoId={"-hTVNidxg2s"}
-      />
+      
     </>
   );
 };
 
 export default SingleProductArea;
+
 
 
