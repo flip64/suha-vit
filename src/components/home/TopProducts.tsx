@@ -44,14 +44,14 @@ const TopProducts = () => {
                       className="product-thumbnail d-block"
                       href="/single-product"
                     >
-                      <img className="mb-2" src={item.images[0]} alt={item.title} />
+                      <img className="mb-2" src={item.thumb} alt={item.name} />
                     </a>
                     <a className="product-title" href="/single-product">
                       {item.name}
                     </a>
                     <p className="sale-price">
-                      $ {item.new_price}
-                      <span>$ {item.old_price}</span>
+                      $ {item.base_price-5000}
+                      <span>$ {item.base_price}</span>
                     </p>
                     <div className="product-rating">
                       <i className="ti ti-star-filled"></i>
@@ -75,5 +75,6 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
+
 
 
