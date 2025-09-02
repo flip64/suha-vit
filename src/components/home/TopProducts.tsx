@@ -51,10 +51,10 @@ const TopProducts = () => {
                     </a>
                     <p className="sale-price">
                       {item.base_price-5000} تومان 
-                      <span>$ {item.base_price}</span> تومان 
+                      <span>{item.base_price}</span> تومان 
                     </p>
                     <div className="product-rating">
-                      <i className="ti ti-star-filled"></i>
+                      <i className="ti ti-star-filled">gh</i>
                       <i className="ti ti-star-filled"></i>
                       <i className="ti ti-star-filled"></i>
                       <i className="ti ti-star-filled"></i>
@@ -75,6 +75,7 @@ const TopProducts = () => {
 };
 
 export default TopProducts;
+
 
 
 
