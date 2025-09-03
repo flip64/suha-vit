@@ -68,21 +68,24 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
         </div>
 
         {/* مشخصات فنی */}
-        {product.specifications && product.specifications.length > 0 && (
-          <div className="container mt-4">
-            <h5>مشخصات فنی</h5>
-            <table className="table table-sm table-bordered">
-              <tbody>
-                {product.specifications.map((spec, index) => (
-                  <tr key={index}>
-                    <th className="w-25">{spec.name}</th>
-                    <td>{spec.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ‌‌
+        
+{product.specifications && product.specifications.length > 0 && (
+  <div className="container mt-4">
+    <h5 className="mb-3">مشخصات فنی</h5>
+    <div className="row g-2">
+      {product.specifications.map((spec, index) => (
+        <div key={index} className="col-6 col-md-4">
+          <div className="p-3 bg-light rounded shadow-sm h-100">
+            <p className="fw-bold mb-1 text-dark">{spec.name}</p>
+            <p className="text-muted small mb-0">{spec.value}</p>
           </div>
-        )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+        
 
         {/* تگ‌ها */}
         {product.tags && product.tags.length > 0 && (
@@ -188,3 +191,4 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
 };
 
 export default SingleProductArea;
+
