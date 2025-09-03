@@ -6,9 +6,40 @@ import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import VideoPopup from "../../modals/VideoPopup";
 
+interface Specification {
+  name: string;
+  value: string;
+}
+
+interface ProductImage {
+  image: string;
+  alt_text?: string | null;
+  is_main?: boolean;
+}
+
+interface Product {
+  id: number;
+  slug: string;
+  name: string;
+  description?: string;
+  base_price: string | number;
+  category?: any;
+  tags?: string[];
+  specifications?: Specification[];
+  variants?: any[];
+  images?: ProductImage[];
+  videos?: any[];
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  is_special?: boolean;
+  special_details?: any;
+  videoId?: string;
+}
+
 interface SingleProductAreaProps {
-  product: any; // محصول شامل images, name, description, base_price و غیره
-  related?: any[]; // اختیاری: می‌تونی لیست محصولات مرتبط هم پاس بدی
+  product: Product;
+  related?: Product[];
 }
 
 const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) => {
@@ -23,11 +54,11 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
       <div className="product-description pb-3">
         <div className="container">
           <h3>{product.name}</h3>
-          <p>{product.description}</p>
+          <p>{product.description || "توضیحی برای این محصول ثبت نشده است."}</p>
 
-          
-
-          <p className="sale-price">{product.base_price} تومان</p>
+          <p className="sale-price">
+            {Number(product.base_price).toLocaleString("fa-IR")} تومان
+          </p>
 
           <div className="quantity-control d-flex align-items-center">
             <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
@@ -35,6 +66,41 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
             <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
           </div>
         </div>
+
+        {/* مشخصات فنی */}
+        {product.specifications && product.specifications.length > 0 && (
+          <div className="container mt-4">
+            <h5>مشخصات فنی</h5>
+            <table className="table table-sm table-bordered">
+              <tbody>
+                {product.specifications.map((spec, index) => (
+                  <tr key={index}>
+                    <th className="w-25">{spec.name}</th>
+                    <td>{spec.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* تگ‌ها */}
+        {product.tags && product.tags.length > 0 && (
+          <div className="container mt-3">
+            <h6>برچسب‌ها:</h6>
+            <div className="d-flex flex-wrap gap-2">
+              {product.tags.map((tag, index) => (
+                <Link 
+                  key={index} 
+                  to={`/search?tag=${encodeURIComponent(tag)}`} 
+                  className="badge bg-light text-dark border"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* محصولات مرتبط */}
         {related.length > 0 && (
@@ -48,20 +114,24 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
               </div>
 
               <Swiper
-                loop={true}
-                slidesPerView={2}
+                loop
                 spaceBetween={10}
                 autoplay={{ delay: 2500, disableOnInteraction: false }}
                 modules={[Autoplay]}
-                className="related-product-slide owl-carousel"
+                breakpoints={{
+                  640: { slidesPerView: 2 },
+                  768: { slidesPerView: 3 },
+                  1024: { slidesPerView: 4 },
+                }}
+                className="related-product-slide"
               >
-                {related.map((item: any) => (
+                {related.map((item) => (
                   <SwiperSlide key={item.slug} className="col-6 col-md-4">
                     <div className="card product-card">
                       <div className="card-body">
-                        <a className="wishlist-btn" href="#">
+                        <button className="wishlist-btn">
                           <i className="ti ti-heart"></i>
-                        </a>
+                        </button>
 
                         <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
                           {item.images?.[0]?.image && (
@@ -77,7 +147,9 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
                           {item.name}
                         </Link>
 
-                        <p className="sale-price">{item.base_price} تومان</p>
+                        <p className="sale-price">
+                          {Number(item.base_price).toLocaleString("fa-IR")} تومان
+                        </p>
 
                         <div className="product-rating">
                           <i className="ti ti-star-filled"></i>
@@ -86,9 +158,9 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
                           <i className="ti ti-star-filled"></i>
                           <i className="ti ti-star-filled"></i>
                         </div>
-                        <a className="btn btn-primary btn-sm" href="#">
+                        <button className="btn btn-primary btn-sm">
                           <i className="ti ti-plus"></i>
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </SwiperSlide>
