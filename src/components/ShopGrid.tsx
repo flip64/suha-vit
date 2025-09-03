@@ -46,7 +46,7 @@ const ShopGrid = () => {
               >
                 <img
                   className="mb-2"
-                  src={item.thump || "/placeholder.png"}
+                  src={item.thumb || "/placeholder.png"}
                   alt={item.name}
                 />
               </Link>
@@ -80,3 +80,4 @@ const ShopGrid = () => {
 };
 
 export default ShopGrid;
+
