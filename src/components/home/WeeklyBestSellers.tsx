@@ -42,7 +42,7 @@ const WeeklyBestSellers = () => {
                   <div className="product-thumbnail-side">
                     <a
                       className="product-thumbnail d-block"
-                      href={`${BASEURL}/single-product/${item.slug}`}
+                      href={`/single-product/${item.slug}`}
                     >
                       <img src={item.thumb} alt={item.name} />
                     </a>

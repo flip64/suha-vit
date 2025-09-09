@@ -50,7 +50,7 @@ const Category = () => {
         <div className="product-catagories-wrapper py-3">
           <div className="container">
             <div className="section-heading rtl-text-right">
-              <h6>Sub Categories</h6>
+              <h6> زیر مجموعه</h6>
             </div>
             <div className="product-catagory-wrap">
               <div className="row g-2 rtl-flex-d-row-r">
@@ -59,7 +59,7 @@ const Category = () => {
                     <div key={i} className="col-3">
                       <div className="card catagory-card">
                         <div className="card-body px-2">
-                          <Link to={`/category/${cat.slug}`}>
+                          <Link to={`/catagory/${cat.slug}`}>
                             <img src={cat.image} alt={cat.name} />
                             <span>{cat.name}</span>
                           </Link>
@@ -99,7 +99,7 @@ const Category = () => {
                           <i className="ti ti-heart"></i>
                         </a>
 
-                        <Link className="product-thumbnail d-block" to={`/product/${item.slug}`}>
+                        <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
                           <img className="mb-2" src={item.thumb} alt={item.name} />
                         </Link>
 
@@ -108,8 +108,8 @@ const Category = () => {
                         </Link>
 
                         <p className="sale-price">
-                          $ {item.price}
-                          {item.old_price && <span>$ {item.old_price}</span>}
+                          {item.base_price} تومان  
+                          {item.base_price && <span> {item.base_price}</span>}
                         </p>
 
                         <div className="product-rating">
