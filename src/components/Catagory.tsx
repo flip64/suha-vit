@@ -108,8 +108,8 @@ const Category = () => {
                         </Link>
 
                         <p className="sale-price">
-                          {item.base_price} تومان  
-                          {item.base_price && <span> {item.base_price}</span>}
+                          {Math.floor(item.base_price).toLocaleString()} تومان  
+                          {Math.floor(item.base_price).toLocaleString() && <span> {Math.floor(item.base_price).toLocaleString()}</span>}
                         </p>
 
                         <div className="product-rating">
