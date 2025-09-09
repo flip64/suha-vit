@@ -29,7 +29,7 @@ const HomePage = () => {
 				<CtaArea />
 				<WeeklyBestSellers />
 				<DiscountCouponCard />
-				{*	<FeaturedProducts /> *}
+				{/*	<FeaturedProducts /> */}
 				<Collections />
 			</div>
 			<Footer />
@@ -38,4 +38,5 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
 
