@@ -100,7 +100,7 @@ const Category = () => {
                         </a>
 
                         <Link className="product-thumbnail d-block" to={`/product/${item.slug}`}>
-                          <img className="mb-2" src={item.image} alt={item.name} />
+                          <img className="mb-2" src={item.thumb} alt={item.name} />
                         </Link>
 
                         <Link className="product-title" to={`/product/${item.slug}`}>
@@ -138,4 +138,5 @@ const Category = () => {
 };
 
 export default Category;
+
 
