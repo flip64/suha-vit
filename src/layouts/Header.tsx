@@ -13,7 +13,7 @@ const Header = () => {
     const fetchUser = async () => {
       try {
         const res = await fetch("https://backend.bazbia.ir/api/auth/user/", {
-          credentials: "include", // اگر با کوکی کار می‌کنیم
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
         });
 
@@ -53,7 +53,7 @@ const Header = () => {
               </a>
             </div>
 
-            {/* پروفایل یا دکمه ورود */}
+            {/* پروفایل یا آیکون ورود با SVG */}
             <div className="user-profile-icon ms-2">
               {loading ? (
                 <span>...</span>
@@ -62,10 +62,27 @@ const Header = () => {
                   <img
                     src={user.avatar || "/assets/img/bg-img/9.jpg"}
                     alt={user.username || "Profile"}
+                    style={{ width: "36px", height: "36px", borderRadius: "50%" }}
                   />
                 </a>
               ) : (
-                <a href="/login">ورود / ثبت‌نام</a>
+                <a href="/login">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="36"
+                    height="36"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M4 21v-2a4 4 0 0 1 3-3.87" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </a>
               )}
             </div>
 
