@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Offcanvas from "../components/common/Offcanvas";
 
 const Header = () => {
@@ -14,11 +13,8 @@ const Header = () => {
     const fetchUser = async () => {
       try {
         const res = await fetch("https://backend.bazbia.ir/api/auth/user/", {
-          credentials: "include", // اگه کوکی استفاده می‌کنی
-          headers: {
-            "Content-Type": "application/json",
-            // "Authorization": `Bearer ${localStorage.getItem("token")}`, // اگه JWT داری
-          },
+          credentials: "include", // اگر با کوکی کار می‌کنیم
+          headers: { "Content-Type": "application/json" },
         });
 
         if (res.ok) {
@@ -43,18 +39,18 @@ const Header = () => {
       <div className="header-area" id="headerArea">
         <div className="container h-100 d-flex align-items-center justify-content-between d-flex rtl-flex-d-row-r">
           <div className="logo-wrapper">
-            <Link href="/home">
-              <img src="/assets/img/core-img/logo-small.png" alt="" />
-            </Link>
+            <a href="/home">
+              <img src="/assets/img/core-img/logo-small.png" alt="Logo" />
+            </a>
           </div>
 
           <div className="navbar-logo-container d-flex align-items-center">
             {/* سبد خرید */}
             <div className="cart-icon-wrap">
-              <Link href="/cart">
+              <a href="/cart">
                 <i className="ti ti-basket-bolt"></i>
                 <span>13</span>
-              </Link>
+              </a>
             </div>
 
             {/* پروفایل یا دکمه ورود */}
@@ -62,14 +58,14 @@ const Header = () => {
               {loading ? (
                 <span>...</span>
               ) : user ? (
-                <Link href="/profile">
+                <a href="/profile">
                   <img
                     src={user.avatar || "/assets/img/bg-img/9.jpg"}
-                    alt={user.username}
+                    alt={user.username || "Profile"}
                   />
-                </Link>
+                </a>
               ) : (
-                <Link href="/login">ورود / ثبت‌نام</Link>
+                <a href="/login">ورود / ثبت‌نام</a>
               )}
             </div>
 
