@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist', // مسیر خروجی بیلد
-    sourcemap: process.env.NODE_ENV === 'development', // فقط توی dev سورس‌مپ روشن باشه
+    sourcemap: false, // فقط توی dev سورس‌مپ روشن باشه
     chunkSizeWarningLimit: 1000, // افزایش محدودیت هشدار سایز
 
     rollupOptions: {
