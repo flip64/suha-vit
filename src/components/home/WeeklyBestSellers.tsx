@@ -13,7 +13,7 @@ const WeeklyBestSellers = () => {
   useEffect(() => {
     const fetchBestSellers = async () => {
       try {
-        const res = await fetch(`${BASEURL}/api/products/`);
+        const res = await fetch(`${BASEURL}/api/orders/weeklyBestSellers`);
         const data = await res.json();
         setBestSeller(data.data);
       } catch (error) {
@@ -80,6 +80,7 @@ const WeeklyBestSellers = () => {
 };
 
 export default WeeklyBestSellers;
+
 
 
 
