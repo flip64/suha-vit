@@ -1,6 +1,6 @@
 @import "swiper/css/bundle";   
-@import "node_modules/bootstrap/scss/bootstrap.scss"; 
 
+@import 'bootstrap/scss/bootstrap.scss';
 @import "../public/assets/css/animate.css";
 @import "../public/assets/css/nice-select.css";
 @import "../public/assets/css/tabler-icons.min.css";
