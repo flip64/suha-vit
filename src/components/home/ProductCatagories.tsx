@@ -39,6 +39,8 @@ const ProductCatagories = () => {
                 <div className="card-body px-2">
                   <a href={`/catagory/${item.slug}`}>
                    <img src={item.img || item.image} alt={item.name} />
+                 
+
                    <span>{item.name}</span>
                   </a>
                 </div>
