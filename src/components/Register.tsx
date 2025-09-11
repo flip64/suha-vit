@@ -25,7 +25,12 @@ const Register = () => {
     setError("");
 
     try {
-      const response = await axios.post(`{BASEURL}/api/customers/register/`, formData);
+      
+      const url =`{BASEURL}/api/customers/register/`
+      console.log(url)
+      const response = await axios.post(url, formData);
+      
+      
       // فرض کنید موفقیت با status 201 مشخص می‌شود
       if (response.status === 201) {
         navigate("/otp"); // بعد از ثبت‌نام به OTP هدایت شود
@@ -150,5 +155,6 @@ const Register = () => {
 };
 
 export default Register;
+
 
 
