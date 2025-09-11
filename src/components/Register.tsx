@@ -26,14 +26,17 @@ const Register = () => {
 
     try {
       
-      const url =`${BASEURL}/api/customers/register/`
+      const url =`http://127.0.0.1:8000/api/customers/register/`
       console.log(url)
       const response = await axios.post(url, formData);
       
-      
+
+  
+
+
       // فرض کنید موفقیت با status 201 مشخص می‌شود
       if (response.status === 201) {
-        navigate("/otp"); // بعد از ثبت‌نام به OTP هدایت شود
+        navigate("/otp", { state: { phone: formData.phone } }); // بعد از ثبت‌نام به OTP هدایت شود
       }
     } catch (err) {
       console.error(err);
