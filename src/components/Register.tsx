@@ -26,7 +26,7 @@ const Register = () => {
 
     try {
       
-      const url =`{BASEURL}/api/customers/register/`
+      const url =`${BASEURL}/api/customers/register/`
       console.log(url)
       const response = await axios.post(url, formData);
       
@@ -155,6 +155,7 @@ const Register = () => {
 };
 
 export default Register;
+
 
 
 
