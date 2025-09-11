@@ -26,7 +26,7 @@ const Register = () => {
 
     try {
       
-      const url =`http://127.0.0.1:8000/api/customers/register/`
+      const url =`${BASEURL}/api/customers/register/`
       console.log(url)
       const response = await axios.post(url, formData);
       
