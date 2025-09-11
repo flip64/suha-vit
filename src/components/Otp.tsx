@@ -15,9 +15,9 @@ const Otp = () => {
 					<div className="row justify-content-center">
 						<div className="col-10 col-lg-8">
 							<div className="text-start rtl-text-right">
-								<h5 className="mb-1 text-white">Phone Verification</h5>
+								<h5 className="mb-1 text-white"> تایید شماره تلفن </h5>
 								<p className="mb-4 text-white">
-									We will send you an OTP on this phone number.
+									ما برای شما یک کد تایید میفرستیم  .
 								</p>
 							</div>
 
@@ -28,11 +28,8 @@ const Otp = () => {
 										<NiceSelect
 											className="filter-select right small border-0 d-flex align-items-center"
 											options={[
-												{ value: "00", text: "+880" },
-												{ value: "01", text: "+62" },
-												{ value: "02", text: "+60" },
-												{ value: "03", text: "+91" },
-												{ value: "04", text: "+198" },
+												{ value: "00", text: "+98" },
+
 											]}
 											defaultCurrent={0}
 											onChange={selectHandler}
