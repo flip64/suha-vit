@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Offcanvas from "../components/common/Offcanvas";
+import {BASEURL} from "../config"
+
 
 const Header = () => {
   const [show, setShow] = useState(false);
@@ -9,35 +11,111 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("https://backend.bazbia.ir/api/auth/user/", {
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+  // گرفتن کاربر
+  const fetchUser = async () => {
+    try {
+      const url = `${BASEURL}/api/customers/current/me/`;
+      let token = localStorage.getItem("accessToken");
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-        } else {
-          setUser(null);
+      console.log("📡 ارسال درخواست به:", url, "با توکن:", token);
+
+     let res = await fetch(url, {
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: token ? `Bearer ${token}` : "",
+  },
+  credentials: "same-origin", // یا "include" اگر بک روی پورت/دامنه متفاوت است
+});
+
+      console.log("📥 نتیجه fetchUser:", res.status);
+
+      // اگر accessToken منقضی شده
+      if (res.status === 401) {
+        console.warn("⚠️ Access Token منقضی شده، تلاش برای رفرش...");
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          token = localStorage.getItem("accessToken");
+          console.log("🔄 توکن جدید گرفته شد:", token);
+
+          res = await fetch(url, {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          });
+
+          console.log("📥 نتیجه بعد از رفرش:", res.status);
         }
-      } catch (err) {
-        console.error("خطا در گرفتن وضعیت لاگین:", err);
-        setUser(null);
-      } finally {
-        setLoading(false);
       }
-    };
 
+      if (res.ok) {
+        const data = await res.json();
+        console.log("✅ کاربر لاگین:", data);
+        setUser(data);
+      } else {
+        console.warn("❌ کاربر لاگین نیست");
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("🚨 خطا در گرفتن وضعیت لاگین:", err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // رفرش توکن
+  const refreshToken = async () => {
+    const refresh = localStorage.getItem("refreshToken");
+    if (!refresh) {
+      console.warn("❌ رفرش توکن وجود ندارد");
+      return false;
+    }
+
+    try {
+      console.log("📡 تلاش برای رفرش توکن...");
+      const res = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
+      });
+
+      console.log("📥 نتیجه refreshToken:", res.status);
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log("✅ رفرش موفق:", data);
+        localStorage.setItem("accessToken", data.access);
+        return true;
+      } else {
+        console.warn("❌ رفرش ناموفق");
+        logoutUser();
+        return false;
+      }
+    } catch (err) {
+      console.error("🚨 خطا در رفرش توکن:", err);
+      logoutUser();
+      return false;
+    }
+  };
+
+  // لاگ‌اوت
+  const logoutUser = () => {
+    console.log("👋 کاربر لاگ‌اوت شد");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setUser(null);
+  };
+
+  useEffect(() => {
     fetchUser();
   }, []);
 
   return (
     <>
       <div className="header-area" id="headerArea">
-        <div className="container h-100 d-flex align-items-center justify-content-between d-flex rtl-flex-d-row-r">
+        <div className="container h-100 d-flex align-items-center justify-content-between rtl-flex-d-row-r">
           <div className="logo-wrapper">
             <a href="/home">
               <img src="/assets/img/core-img/logo-small.png" alt="Logo" />
@@ -53,7 +131,7 @@ const Header = () => {
               </a>
             </div>
 
-            {/* پروفایل یا آیکون ورود با SVG */}
+            {/* پروفایل */}
             <div className="user-profile-icon ms-2">
               {loading ? (
                 <span>...</span>
@@ -86,7 +164,7 @@ const Header = () => {
               )}
             </div>
 
-            {/* منوی همبرگری (Offcanvas) */}
+            {/* منوی همبرگری */}
             <div className="suha-navbar-toggler ms-2">
               <div onClick={handleShow}>
                 <span></span>
@@ -104,3 +182,4 @@ const Header = () => {
 };
 
 export default Header;
+
