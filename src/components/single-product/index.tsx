@@ -177,7 +177,7 @@ const SingleProductIndex = () => {
                   className="add-to-cart-btn"
                   disabled={!product.in_stock}
                 >
-                  {product.in_stock ? 'افزودن به سبد خرید' : 'ناموجود'}
+                  {product.quantity ? 'افزودن به سبد خرید' : 'ناموجود'}
                 </button>
               </div>
             </div>
@@ -194,3 +194,4 @@ const SingleProductIndex = () => {
 };
 
 export default SingleProductIndex;
+
