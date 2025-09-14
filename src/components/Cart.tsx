@@ -22,6 +22,7 @@ const Cart = () => {
 
   // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
+    console.log("📡 [API] GET", `${BASEURL}/api/orders/cart/`);
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
@@ -31,9 +32,10 @@ const Cart = () => {
       });
       if (!res.ok) throw new Error("خطا در دریافت سبد خرید");
       const data = await res.json();
+      console.log("✅ [API] Response GET Cart:", data);
       setCart(data.items || []);
     } catch (err) {
-      console.error(err);
+      console.error("❌ [API] GET Cart Error:", err);
     } finally {
       setLoading(false);
     }
@@ -43,10 +45,11 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // ✏️ تغییر تعداد یا حذف محصول (quantity=0 یعنی حذف)
+  // ✏️ تغییر تعداد یا حذف محصول
   const updateCartItem = async (id: number, quantity: number) => {
+    console.log("📡 [API] POST", `${BASEURL}/api/orders/cart/`, { product_id: id, quantity });
     try {
-      await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,9 +57,12 @@ const Cart = () => {
         },
         body: JSON.stringify({ product_id: id, quantity }),
       });
+      if (!res.ok) throw new Error("خطا در بروزرسانی سبد خرید");
+      const data = await res.json();
+      console.log("✅ [API] Response POST Cart:", data);
       fetchCart(); // بروزرسانی سبد
     } catch (err) {
-      console.error(err);
+      console.error("❌ [API] POST Cart Error:", err);
     }
   };
 
