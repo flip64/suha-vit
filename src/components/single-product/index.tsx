@@ -1,28 +1,28 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { BASEURL } from "../../config";
 import HeaderTwo from "../../layouts/HeaderTwo";
 import ProductSlider from "./ProductSlider";
 import SingleProductArea from "./SingleProductArea";
 import Footer from "../../layouts/Footer";
-import { useCart } from "../CartContext"; // مسیر به CartContext
 import "./SingleProduct.css";
 
 const SingleProductIndex = () => {
   const { slug } = useParams();
-  const navigate = useNavigate();
-  const { addToCart } = useCart(); //  استفاده از CartContext
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false); // حالت ارسال به سبد
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // دریافت محصول از API
+  const token = localStorage.getItem("accessToken");
+
+  // 📦 دریافت محصول از API
   useEffect(() => {
     if (!slug) {
       setLoading(false);
@@ -38,6 +38,8 @@ const SingleProductIndex = () => {
         setLoading(true);
         setError(null);
 
+        console.log("📡 [API] GET Product", `${BASEURL}/api/products/${slug}/`);
+
         const res = await fetch(`${BASEURL}/api/products/${slug}/`, {
           signal,
           headers: { "Content-Type": "application/json" },
@@ -49,11 +51,13 @@ const SingleProductIndex = () => {
         }
 
         const data = await res.json();
+        console.log("✅ [API] Response GET Product:", data);
+
         setProduct(data);
-        setQuantity(1); // بازنشانی تعداد برای هر محصول جدید
+        setQuantity(1);
       } catch (err: any) {
         if (err.name === "AbortError") return;
-        setError(err.message || "خطای ناشناخته ای رخ داده است");
+        setError(err.message || "خطای ناشناخته رخ داده است");
         setProduct(null);
       } finally {
         setLoading(false);
@@ -67,26 +71,46 @@ const SingleProductIndex = () => {
     };
   }, [slug]);
 
-  // ⚡ افزودن محصول به سبد خرید با محدودیت موجودی
-  const handleAddToCart = () => {
+  // ⚡ افزودن محصول به سبد خرید با API واحد
+  const handleAddToCart = async () => {
     if (!product) return;
+    if (quantity > product.quantity) {
+      alert(`حداکثر موجودی محصول ${product.quantity} عدد است.`);
+      return;
+    }
 
     const cartItem = {
-      id: product.id,
-      productName: product.name,
-      price: product.discount_price || product.price,
-      quantity: quantity,
-      maxQuantity: product.quantity, // موجودی واقعی محصول
-      imageUrl: product.images[0]?.image || "/images/placeholder-product.jpg",
+      product_id: product.id,
+      quantity,
     };
 
-    addToCart(cartItem);
+    try {
+      setAdding(true);
+      console.log("📡 [API] POST Cart", `${BASEURL}/api/orders/cart/`, cartItem);
 
-    alert(`${quantity} عدد ${product.name} به سبد خرید اضافه شد!`);
-    // navigate('/cart'); // اختیاری
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(cartItem),
+      });
+
+      if (!res.ok) throw new Error("خطا در افزودن محصول به سبد خرید");
+
+      const data = await res.json();
+      console.log("✅ [API] Response POST Cart:", data);
+
+      alert(`${quantity} عدد ${product.name} به سبد خرید اضافه شد!`);
+    } catch (err: any) {
+      console.error("❌ [API] POST Cart Error:", err);
+      alert(err.message || "خطا در افزودن محصول به سبد خرید");
+    } finally {
+      setAdding(false);
+    }
   };
 
-  //  کنترل تعداد با محدودیت موجودی
   const increaseQuantity = () => {
     if (!product) return;
     setQuantity((prev) => Math.min(prev + 1, product.quantity));
@@ -153,9 +177,9 @@ const SingleProductIndex = () => {
                 <button
                   onClick={handleAddToCart}
                   className="add-to-cart-btn"
-                  disabled={!product.quantity}
+                  disabled={!product.quantity || adding}
                 >
-                  {product.quantity ? "افزودن به سبد خرید" : "ناموجود"}
+                  {adding ? "در حال افزودن..." : product.quantity ? "افزودن به سبد خرید" : "ناموجود"}
                 </button>
               </div>
             </div>
@@ -165,11 +189,9 @@ const SingleProductIndex = () => {
         )}
       </div>
 
-      <div className="internet-connection-status" id="internetStatus"></div>
       <Footer />
     </>
   );
 };
 
 export default SingleProductIndex;
-
