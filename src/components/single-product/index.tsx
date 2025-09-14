@@ -17,13 +17,11 @@ const SingleProductIndex = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [adding, setAdding] = useState(false); // حالت ارسال به سبد
+  const [adding, setAdding] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const token = localStorage.getItem("accessToken");
-  console.log("🔑 Token:", token);
-  
-  // 📦 دریافت محصول از API
+
   useEffect(() => {
     if (!slug) {
       setLoading(false);
@@ -72,7 +70,6 @@ const SingleProductIndex = () => {
     };
   }, [slug]);
 
-  // ⚡ افزودن محصول به سبد خرید با API واحد
   const handleAddToCart = async () => {
     if (!product) return;
     if (quantity > product.quantity) {
@@ -80,8 +77,9 @@ const SingleProductIndex = () => {
       return;
     }
 
+    // 🔹 تغییر کلید به variant_id مطابق با سرور
     const cartItem = {
-      product_id: product.id,
+      variant_id: product.id,
       quantity,
     };
 
@@ -98,10 +96,10 @@ const SingleProductIndex = () => {
         body: JSON.stringify(cartItem),
       });
 
-      if (!res.ok) throw new Error("خطا در افزودن محصول به سبد خرید");
+      const data = await res.json().catch(() => ({}));
+      console.log("📝 Server Response:", data);
 
-      const data = await res.json();
-      console.log("✅ [API] Response POST Cart:", data);
+      if (!res.ok) throw new Error(data.message || "خطا در افزودن محصول به سبد خرید");
 
       alert(`${quantity} عدد ${product.name} به سبد خرید اضافه شد!`);
     } catch (err: any) {
@@ -196,4 +194,3 @@ const SingleProductIndex = () => {
 };
 
 export default SingleProductIndex;
-
