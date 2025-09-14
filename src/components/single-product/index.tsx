@@ -21,7 +21,8 @@ const SingleProductIndex = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const token = localStorage.getItem("accessToken");
-
+  console.log("🔑 Token:", token);
+  
   // 📦 دریافت محصول از API
   useEffect(() => {
     if (!slug) {
@@ -195,3 +196,4 @@ const SingleProductIndex = () => {
 };
 
 export default SingleProductIndex;
+
