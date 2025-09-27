@@ -100,9 +100,25 @@ const ShopGrid = () => {
                 <Link className="product-title mb-1" to={`/single-product/${item.slug}`}>
                   {item.name}
                 </Link>
-                <p className="sale-price">
-                  {Number(item.base_price).toLocaleString("fa-IR")} تومان
+               
+               <p className="sale-price">
+                 {item.discount_price
+                      ? (
+                      <>
+                 {Number(item.discount_price).toLocaleString("fa-IR")} تومان
+                  <span className="original-price">
+                   {Number(item.price).toLocaleString("fa-IR")} تومان
+                  </span>
+                   </>
+                    ) : (
+                  `${Number(item.price).toLocaleString("fa-IR")} تومان`
+                      )
+                      }
                 </p>
+
+               
+               
+               
                 <div className="product-rating mb-2">
                   {Array.from({ length: 5 }).map((_, idx) => (
                     <i key={idx} className="ti ti-star-filled"></i>
