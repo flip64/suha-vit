@@ -6,7 +6,7 @@ import HeaderTwo from "../layouts/HeaderTwo";
 import NiceSelect from "../ui/NiceSelect";
 import { Link } from "react-router-dom";
 import Footer from "../layouts/Footer";
-import { BASEURL } from "../config"; // آدرس API خودت
+import { BASEURL } from "../config";
 
 const product_categories = [
   { image: "/assets/img/product/5.png", title: "Furniture" },
@@ -19,13 +19,12 @@ const product_categories = [
 
 interface Product {
   id: number;
+  name: string;
   slug: string;
-  img: string;
-  title: string;
-  old_price: number;
-  new_price: number | null;
-  ratting: number;
-  review_text: number;
+  price: number;
+  discount_price: number | null;
+  category: string;
+  thumb: string;
 }
 
 const ShopList = () => {
@@ -38,11 +37,12 @@ const ShopList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${BASEURL}/api/products/?page=1&page_size=20`);
+        const res = await fetch(`${BASEURL}/api/orders/weeklyBestSellers/?page=1&page_size=20`);
         const data = await res.json();
-        setProducts(data.data); // فرض بر این است که data.results لیست محصول است
+        setProducts(data.data || []);
       } catch (error) {
         console.error("Error fetching products:", error);
+        setProducts([]);
       }
     };
 
@@ -94,52 +94,55 @@ const ShopList = () => {
 
             <div className="mb-3"></div>
             <div className="row g-2">
-              {products.map((item) => (
-                <div key={item.id} className="col-12">
-                  <div className="card horizontal-product-card">
-                    <div className="d-flex align-items-center">
-                      <div className="product-thumbnail-side">
-                        <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
-                          <img src={item.img} alt={item.title} />
-                        </Link>
-                        <a className="wishlist-btn" href="#">
-                          <i className="ti ti-heart"></i>
-                        </a>
-                      </div>
-                      <div className="product-description">
-                        <Link className="product-title d-block" to={`/single-product/${item.slug}`}>
-                          {item.title}
-                        </Link>
+              {products.length > 0 ? (
+                products.map((item) => (
+                  <div key={item.id} className="col-12">
+                    <div className="card horizontal-product-card">
+                      <div className="d-flex align-items-center">
+                        <div className="product-thumbnail-side">
+                          <Link
+                            className="product-thumbnail d-block"
+                            to={`/single-product/${item.slug}`}
+                          >
+                            <img src={item.thumb} alt={item.name} />
+                          </Link>
+                          <a className="wishlist-btn" href="#">
+                            <i className="ti ti-heart"></i>
+                          </a>
+                        </div>
+                        <div className="product-description">
+                          <Link
+                            className="product-title d-block"
+                            to={`/single-product/${item.slug}`}
+                          >
+                            {item.name}
+                          </Link>
 
-                        <p className="sale-price">
-                          {item.new_price && item.new_price > 0 ? (
-                            <>
-                              {formatPrice(item.new_price)}
-                              {item.old_price !== item.new_price && (
-                                <span
-                                  className="original-price ms-2"
-                                  style={{ textDecoration: "line-through", color: "#999" }}
-                                >
-                                  {formatPrice(item.old_price)}
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            formatPrice(item.old_price)
-                          )}
-                        </p>
-
-                        <div className="product-rating">
-                          <i className="ti ti-star-filled"></i> {item.ratting}{" "}
-                          <span className="ms-1">
-                            ({item.review_text} {item.review_text > 1 ? "reviews" : "review"})
-                          </span>
+                          <p className="sale-price">
+                            {item.discount_price && item.discount_price > 0 ? (
+                              <>
+                                {formatPrice(item.discount_price)}
+                                {item.price !== item.discount_price && (
+                                  <span
+                                    className="original-price ms-2"
+                                    style={{ textDecoration: "line-through", color: "#999" }}
+                                  >
+                                    {formatPrice(item.price)}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              formatPrice(item.price)
+                            )}
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p>در حال بارگذاری محصولات...</p>
+              )}
             </div>
           </div>
         </div>
@@ -152,4 +155,3 @@ const ShopList = () => {
 };
 
 export default ShopList;
-
