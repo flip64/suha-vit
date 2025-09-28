@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
 import HeaderTwo from "../layouts/HeaderTwo";
 import NiceSelect from "../ui/NiceSelect";
 import Footer from "../layouts/Footer";
@@ -20,11 +21,20 @@ interface Product {
   sales_count?: number;
 }
 
-const ShopListInfiniteSort = () => {
+const product_categories = [
+  { image: "/assets/img/product/5.png", title: "Furniture" },
+  { image: "/assets/img/product/9.png", title: "Shoes" },
+  { image: "/assets/img/product/4.png", title: "Dress" },
+  { image: "/assets/img/product/9.png", title: "Shoes" },
+  { image: "/assets/img/product/5.png", title: "Furniture" },
+  { image: "/assets/img/product/4.png", title: "Dress" },
+];
+
+const ShopListInfiniteSortWithCategories = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [sort, setSort] = useState("newest"); // مقدار پیش‌فرض
+  const [sort, setSort] = useState("newest");
   const loaderRef = useRef<HTMLDivElement>(null);
 
   const formatPrice = (price: number) =>
@@ -50,13 +60,11 @@ const ShopListInfiniteSort = () => {
     }
   };
 
-  // fetch اولیه و وقتی sort تغییر کرد
   useEffect(() => {
     setPage(1);
     fetchProducts(1, sort);
   }, [sort]);
 
-  // Intersection Observer برای infinite scroll
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
@@ -76,22 +84,44 @@ const ShopListInfiniteSort = () => {
     };
   }, [handleObserver]);
 
-  // fetch صفحات بعدی
   useEffect(() => {
     if (page > 1) fetchProducts(page, sort);
   }, [page]);
 
   const selectHandler = (selectedValue: string) => {
     setSort(selectedValue);
-    setPage(1); // شروع از صفحه اول
+    setPage(1);
   };
 
   return (
     <>
       <HeaderTwo links="home" title="Shop List" />
+
       <div className="page-content-wrapper">
         <div className="py-3">
           <div className="container">
+            {/* اسلایدر دسته‌بندی‌ها */}
+            <div className="row g-1 align-items-center rtl-flex-d-row-r mb-3">
+              <div className="col-12">
+                <Swiper
+                  loop={true}
+                  slidesPerView={3.5}
+                  spaceBetween={10}
+                  className="product-catagories owl-carousel catagory-slides"
+                >
+                  {product_categories.map((item, i) => (
+                    <SwiperSlide key={i}>
+                      <a className="shadow-sm d-block text-center" href="#">
+                        <img src={item.image} alt={item.title} />
+                        <div>{item.title}</div>
+                      </a>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+            </div>
+
+            {/* منوی مرتب‌سازی */}
             <div className="select-product-catagory mb-3">
               <NiceSelect
                 className="filter-select right small border-0 d-flex align-items-center"
@@ -107,6 +137,7 @@ const ShopListInfiniteSort = () => {
               />
             </div>
 
+            {/* لیست محصولات */}
             <div className="row g-2">
               {products.map((item) => (
                 <div key={item.id} className="col-12">
@@ -171,6 +202,7 @@ const ShopListInfiniteSort = () => {
               ))}
             </div>
 
+            {/* loader */}
             {hasMore && (
               <div
                 ref={loaderRef}
@@ -183,10 +215,11 @@ const ShopListInfiniteSort = () => {
           </div>
         </div>
       </div>
+
       <div className="internet-connection-status" id="internetStatus"></div>
       <Footer />
     </>
   );
 };
 
-export default ShopListInfiniteSort;
+export default ShopListInfiniteSortWithCategories;
