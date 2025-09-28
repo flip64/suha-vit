@@ -30,7 +30,7 @@ const product_categories = [
   { image: "/assets/img/product/4.png", title: "Dress" },
 ];
 
-const ShopListFullWidthFinal = () => {
+const ShopListFinal = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -101,7 +101,7 @@ const ShopListFullWidthFinal = () => {
         <div className="py-3">
           <div className="container">
 
-            {/* اسلایدر دسته‌بندی‌ها جدا از کارت‌ها */}
+            {/* اسلایدر دسته‌بندی‌ها */}
             <div className="row mb-3">
               <div className="col-12">
                 <Swiper
@@ -122,20 +122,22 @@ const ShopListFullWidthFinal = () => {
               </div>
             </div>
 
-            {/* منوی مرتب‌سازی */}
-            <div className="select-product-catagory mb-3">
-              <NiceSelect
-                className="filter-select right small border-0 d-flex align-items-center"
-                options={[
-                  { value: "newest", text: "Newest" },
-                  { value: "popular", text: "Popular" },
-                  { value: "rating", text: "Ratings" },
-                ]}
-                defaultCurrent={0}
-                onChange={selectHandler}
-                placeholder="Select an option"
-                name="sortSelect"
-              />
+            {/* منوی مرتب‌سازی بالای لیست */}
+            <div className="row mb-3">
+              <div className="col-12">
+                <NiceSelect
+                  className="filter-select right small border-0 d-flex align-items-center"
+                  options={[
+                    { value: "newest", text: "Newest" },
+                    { value: "popular", text: "Popular" },
+                    { value: "rating", text: "Ratings" },
+                  ]}
+                  defaultCurrent={0}
+                  onChange={selectHandler}
+                  placeholder="Select an option"
+                  name="sortSelect"
+                />
+              </div>
             </div>
 
             {/* کارت‌های محصولات تمام عرض */}
@@ -219,6 +221,7 @@ const ShopListFullWidthFinal = () => {
               </div>
             )}
             {!hasMore && <p className="text-center">هیچ محصول جدیدی وجود ندارد</p>}
+
           </div>
         </div>
       </div>
@@ -229,4 +232,4 @@ const ShopListFullWidthFinal = () => {
   );
 };
 
-export default ShopListFullWidthFinal;
+export default ShopListFinal;
