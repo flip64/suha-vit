@@ -30,7 +30,7 @@ const product_categories = [
   { image: "/assets/img/product/4.png", title: "Dress" },
 ];
 
-const ShopListInfiniteSortWithCategories = () => {
+const ShopListFullWidthCards = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -100,6 +100,7 @@ const ShopListInfiniteSortWithCategories = () => {
       <div className="page-content-wrapper">
         <div className="py-3">
           <div className="container">
+
             {/* اسلایدر دسته‌بندی‌ها */}
             <div className="row g-1 align-items-center rtl-flex-d-row-r mb-3">
               <div className="col-12">
@@ -137,11 +138,14 @@ const ShopListInfiniteSortWithCategories = () => {
               />
             </div>
 
-            {/* لیست محصولات */}
+            {/* لیست محصولات با کارت تمام عرض */}
             <div className="row g-2">
               {products.map((item) => (
                 <div key={item.id} className="col-12">
-                  <div className="card horizontal-product-card">
+                  <div
+                    className="card horizontal-product-card w-100"
+                    style={{ minWidth: 0 }}
+                  >
                     <div className="d-flex align-items-center">
                       <div className="product-thumbnail-side">
                         <Link
@@ -154,7 +158,10 @@ const ShopListInfiniteSortWithCategories = () => {
                           <i className="ti ti-heart"></i>
                         </a>
                       </div>
-                      <div className="product-description">
+                      <div
+                        className="product-description"
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
                         <Link
                           className="product-title d-block"
                           to={`/single-product/${item.slug}`}
@@ -222,4 +229,4 @@ const ShopListInfiniteSortWithCategories = () => {
   );
 };
 
-export default ShopListInfiniteSortWithCategories;
+export default ShopListFullWidthCards;
