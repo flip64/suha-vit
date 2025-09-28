@@ -30,25 +30,20 @@ const product_categories = [
   { image: "/assets/img/product/4.png", title: "Dress" },
 ];
 
-const ShopListFinalWithCategory = () => {
+const ShopListFinal = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [sort, setSort] = useState("newest");
-  const [category, setCategory] = useState("all");
   const loaderRef = useRef<HTMLDivElement>(null);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
 
-  const fetchProducts = async (
-    pageNum: number,
-    sortType: string,
-    categoryFilter: string
-  ) => {
+  const fetchProducts = async (pageNum: number, sortType: string) => {
     try {
       const res = await fetch(
-        `${BASEURL}/api/orders/weeklyBestSellers/?page=${pageNum}&page_size=10&sort=${sortType}&category=${categoryFilter}`
+        `${BASEURL}/api/orders/weeklyBestSellers/?page=${pageNum}&page_size=10&sort=${sortType}`
       );
       const data = await res.json();
       if (!data.data || data.data.length === 0 || pageNum >= data.total_pages) {
@@ -67,8 +62,8 @@ const ShopListFinalWithCategory = () => {
 
   useEffect(() => {
     setPage(1);
-    fetchProducts(1, sort, category);
-  }, [sort, category]);
+    fetchProducts(1, sort);
+  }, [sort]);
 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -90,16 +85,11 @@ const ShopListFinalWithCategory = () => {
   }, [handleObserver]);
 
   useEffect(() => {
-    if (page > 1) fetchProducts(page, sort, category);
+    if (page > 1) fetchProducts(page, sort);
   }, [page]);
 
-  const selectSortHandler = (selectedValue: string) => {
+  const selectHandler = (selectedValue: string) => {
     setSort(selectedValue);
-    setPage(1);
-  };
-
-  const selectCategoryHandler = (selectedValue: string) => {
-    setCategory(selectedValue);
     setPage(1);
   };
 
@@ -111,10 +101,9 @@ const ShopListFinalWithCategory = () => {
         <div className="py-3">
           <div className="container">
 
-            {/* ردیف دسته‌بندی + منوی انتخاب دسته‌بندی کنار هم */}
-            <div className="row mb-3 align-items-center">
-              {/* Swiper دسته‌بندی‌ها */}
-              <div className="col-8">
+            {/* اسلایدر دسته‌بندی‌ها */}
+            <div className="row mb-3">
+              <div className="col-12">
                 <Swiper
                   loop={true}
                   slidesPerView={3.5}
@@ -131,26 +120,9 @@ const ShopListFinalWithCategory = () => {
                   ))}
                 </Swiper>
               </div>
-
-              {/* منوی انتخاب دسته‌بندی کنار Swiper */}
-              <div className="col-4">
-                <NiceSelect
-                  className="filter-select right small border-0 d-flex align-items-center"
-                  options={[
-                    { value: "all", text: "All Categories" },
-                    { value: "furniture", text: "Furniture" },
-                    { value: "shoes", text: "Shoes" },
-                    { value: "dress", text: "Dress" },
-                  ]}
-                  defaultCurrent={0}
-                  onChange={selectCategoryHandler}
-                  placeholder="Select category"
-                  name="categorySelect"
-                />
-              </div>
             </div>
 
-            {/* منوی مرتب‌سازی بالای کارت‌ها */}
+            {/* منوی مرتب‌سازی بالای لیست */}
             <div className="row mb-3">
               <div className="col-12">
                 <NiceSelect
@@ -161,8 +133,8 @@ const ShopListFinalWithCategory = () => {
                     { value: "rating", text: "Ratings" },
                   ]}
                   defaultCurrent={0}
-                  onChange={selectSortHandler}
-                  placeholder="Select sort"
+                  onChange={selectHandler}
+                  placeholder="Select an option"
                   name="sortSelect"
                 />
               </div>
@@ -202,10 +174,7 @@ const ShopListFinalWithCategory = () => {
                         <p className="sale-price">
                           {item.discount_price && item.discount_price > 0 ? (
                             <>
-                              {new Intl.NumberFormat("fa-IR").format(
-                                item.discount_price
-                              )}{" "}
-                              تومان
+                              {formatPrice(item.discount_price)}
                               {item.price !== item.discount_price && (
                                 <span
                                   className="original-price ms-2"
@@ -214,16 +183,12 @@ const ShopListFinalWithCategory = () => {
                                     color: "#999",
                                   }}
                                 >
-                                  {new Intl.NumberFormat("fa-IR").format(
-                                    item.price
-                                  )}{" "}
-                                  تومان
+                                  {formatPrice(item.price)}
                                 </span>
                               )}
                             </>
                           ) : (
-                            new Intl.NumberFormat("fa-IR").format(item.price) +
-                            " تومان"
+                            formatPrice(item.price)
                           )}
                         </p>
 
@@ -267,4 +232,4 @@ const ShopListFinalWithCategory = () => {
   );
 };
 
-export default ShopListFinalWithCategory;
+export default ShopListFinal;
