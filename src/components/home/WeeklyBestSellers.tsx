@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import {BASEURL} from "../../config"
+import { BASEURL } from "../../config";
+
+interface Product {
+  slug: string;
+  thumb: string;
+  name: string;
+  discount_price: number;
+  price: number;
+  rating: number;
+  review_text: number;
+}
+
 const WeeklyBestSellers = () => {
-   
-
-
-  
-  
-  
-  
-  const [bestSeller, setBestSeller] = useState([]);
+  const [bestSeller, setBestSeller] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchBestSellers = async () => {
@@ -18,12 +22,11 @@ const WeeklyBestSellers = () => {
         setBestSeller(data.data);
       } catch (error) {
         console.error("Error fetching best sellers:", error);
-        
       }
     };
 
     fetchBestSellers();
-  }, [BASEURL]);
+  }, []);
 
   return (
     <div className="weekly-best-seller-area py-3">
@@ -35,15 +38,12 @@ const WeeklyBestSellers = () => {
           </a>
         </div>
         <div className="row g-2">
-          {bestSeller.map((item: any, i: number) => (
+          {bestSeller.map((item, i) => (
             <div key={i} className="col-12">
               <div className="card horizontal-product-card">
                 <div className="d-flex align-items-center">
                   <div className="product-thumbnail-side">
-                    <a
-                      className="product-thumbnail d-block"
-                      href={`/single-product/${item.slug}`}
-                    >
+                    <a className="product-thumbnail d-block" href={`/single-product/${item.slug}`}>
                       <img src={item.thumb} alt={item.name} />
                     </a>
                     <a className="wishlist-btn" href="#">
@@ -51,21 +51,24 @@ const WeeklyBestSellers = () => {
                     </a>
                   </div>
                   <div className="product-description">
-                    <a
-                      className="product-title d-block"
-                      href={`${BASEURL}/single-product/${item.slug}`}
-                    >
+                    <a className="product-title d-block" href={`/single-product/${item.slug}`}>
                       {item.name}
                     </a>
                     <p className="sale-price">
-                      <i className="ti ti-currency-dollar"></i> ${item.discount_price}
-                      <span>$ {item.pricr}</span>
+                      {item.discount_price} تومان
+                      {item.price !== item.discount_price && (
+                        <span
+                          className="original-price ms-2"
+                          style={{ textDecoration: "line-through", color: "#999" }}
+                        >
+                          {item.price} تومان
+                        </span>
+                      )}
                     </p>
                     <div className="product-rating">
                       <i className="ti ti-star-filled"></i> {item.rating}{" "}
                       <span className="ms-1">
-                        ({item.review_text}{" "}
-                        {item.review_text > 1 ? "reviews" : "review"})
+                        ({item.review_text} {item.review_text > 1 ? "reviews" : "review"})
                       </span>
                     </div>
                   </div>
@@ -80,17 +83,3 @@ const WeeklyBestSellers = () => {
 };
 
 export default WeeklyBestSellers;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
