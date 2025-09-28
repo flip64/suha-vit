@@ -5,7 +5,7 @@ interface Product {
   slug: string;
   thumb: string;
   name: string;
-  discount_price: number;
+  discount_price: number | null;
   price: number;
   rating: number;
   review_text: number;
@@ -27,6 +27,10 @@ const WeeklyBestSellers = () => {
 
     fetchBestSellers();
   }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("fa-IR").format(price) + " تومان";
+  };
 
   return (
     <div className="weekly-best-seller-area py-3">
@@ -55,14 +59,20 @@ const WeeklyBestSellers = () => {
                       {item.name}
                     </a>
                     <p className="sale-price">
-                      {item.discount_price} تومان
-                      {item.price !== item.discount_price && (
-                        <span
-                          className="original-price ms-2"
-                          style={{ textDecoration: "line-through", color: "#999" }}
-                        >
-                          {item.price} تومان
-                        </span>
+                      {item.discount_price && item.discount_price > 0 ? (
+                        <>
+                          {formatPrice(item.discount_price)}
+                          {item.price !== item.discount_price && (
+                            <span
+                              className="original-price ms-2"
+                              style={{ textDecoration: "line-through", color: "#999" }}
+                            >
+                              {formatPrice(item.price)}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        formatPrice(item.price)
                       )}
                     </p>
                     <div className="product-rating">
