@@ -30,7 +30,7 @@ const product_categories = [
   { image: "/assets/img/product/4.png", title: "Dress" },
 ];
 
-const ShopListFullWidthCards = () => {
+const ShopListFullWidthFinal = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -101,8 +101,8 @@ const ShopListFullWidthCards = () => {
         <div className="py-3">
           <div className="container">
 
-            {/* اسلایدر دسته‌بندی‌ها */}
-            <div className="row g-1 align-items-center rtl-flex-d-row-r mb-3">
+            {/* اسلایدر دسته‌بندی‌ها جدا از کارت‌ها */}
+            <div className="row mb-3">
               <div className="col-12">
                 <Swiper
                   loop={true}
@@ -138,7 +138,7 @@ const ShopListFullWidthCards = () => {
               />
             </div>
 
-            {/* لیست محصولات با کارت تمام عرض */}
+            {/* کارت‌های محصولات تمام عرض */}
             <div className="row g-2">
               {products.map((item) => (
                 <div key={item.id} className="col-12">
@@ -229,4 +229,4 @@ const ShopListFullWidthCards = () => {
   );
 };
 
-export default ShopListFullWidthCards;
+export default ShopListFullWidthFinal;
