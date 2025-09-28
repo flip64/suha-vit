@@ -1,11 +1,12 @@
 "use client"; 
 
+import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import HeaderTwo from "../layouts/HeaderTwo";
 import NiceSelect from "../ui/NiceSelect";
-import best_seller from "../data/best_seller";
 import { Link } from "react-router-dom";
 import Footer from "../layouts/Footer";
+import { BASEURL } from "../config"; // آدرس API خودت
 
 const product_categories = [
   { image: "/assets/img/product/5.png", title: "Furniture" },
@@ -16,11 +17,37 @@ const product_categories = [
   { image: "/assets/img/product/4.png", title: "Dress" },
 ];
 
+interface Product {
+  id: number;
+  slug: string;
+  img: string;
+  title: string;
+  old_price: number;
+  new_price: number | null;
+  ratting: number;
+  review_text: number;
+}
+
 const ShopList = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const selectHandler = () => {};
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("fa-IR").format(price) + " تومان";
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch(`${BASEURL}/api/products/?page=1&page_size=20`);
+        const data = await res.json();
+        setProducts(data.results); // فرض بر این است که data.results لیست محصول است
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <>
@@ -67,20 +94,20 @@ const ShopList = () => {
 
             <div className="mb-3"></div>
             <div className="row g-2">
-              {best_seller.map((item, i) => (
-                <div key={i} className="col-12">
+              {products.map((item) => (
+                <div key={item.id} className="col-12">
                   <div className="card horizontal-product-card">
                     <div className="d-flex align-items-center">
                       <div className="product-thumbnail-side">
-                        <Link className="product-thumbnail d-block" to="/single-product">
-                          <img src={item.img} alt="" />
+                        <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
+                          <img src={item.img} alt={item.title} />
                         </Link>
                         <a className="wishlist-btn" href="#">
                           <i className="ti ti-heart"></i>
                         </a>
                       </div>
                       <div className="product-description">
-                        <Link className="product-title d-block" to="/single-product">
+                        <Link className="product-title d-block" to={`/single-product/${item.slug}`}>
                           {item.title}
                         </Link>
 
@@ -113,8 +140,6 @@ const ShopList = () => {
                   </div>
                 </div>
               ))}
-
-              {/* در صورت نیاز می‌توانید دوباره‌نمایش best_seller را حذف کنید تا تکراری نشود */}
             </div>
           </div>
         </div>
