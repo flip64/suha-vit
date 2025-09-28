@@ -40,7 +40,7 @@ const ShopList = () => {
       try {
         const res = await fetch(`${BASEURL}/api/products/?page=1&page_size=20`);
         const data = await res.json();
-        setProducts(data.results); // فرض بر این است که data.results لیست محصول است
+        setProducts(data.data); // فرض بر این است که data.results لیست محصول است
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -152,3 +152,4 @@ const ShopList = () => {
 };
 
 export default ShopList;
+
