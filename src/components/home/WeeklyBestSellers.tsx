@@ -58,8 +58,8 @@ const WeeklyBestSellers = () => {
                       {item.name}
                     </a>
                     <p className="sale-price">
-                      <i className="ti ti-currency-dollar"></i> ${item.new_price}
-                      <span>$ {item.base_price}</span>
+                      <i className="ti ti-currency-dollar"></i> ${item.discount_price}
+                      <span>$ {item.pricr}</span>
                     </p>
                     <div className="product-rating">
                       <i className="ti ti-star-filled"></i> {item.rating}{" "}
@@ -80,6 +80,7 @@ const WeeklyBestSellers = () => {
 };
 
 export default WeeklyBestSellers;
+
 
 
 
