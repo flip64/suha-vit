@@ -27,7 +27,7 @@ const HeroSlider = () => {
 											data-delay="100ms"
 											data-duration="1000ms"
 										>
-											Amazon Echo
+									                  		 باز بیا                 
 										</h4>
 										<p
 											className="text-white"
@@ -35,7 +35,7 @@ const HeroSlider = () => {
 											data-delay="400ms"
 											data-duration="1000ms"
 										>
-											3rd Generation, Charcoal
+											انتخابی که آنرا تکرار خواهید کرد 
 										</p>
 										<a
 											className="btn btn-primary"
