@@ -18,7 +18,7 @@ const Category = () => {
 
   const loader = useRef<HTMLDivElement>(null);
 
-  // 🔹 تابع دریافت محصولات و زیرمجموعه‌ها
+  // 🟩 دریافت محصولات و زیرمجموعه‌ها
   const loadProducts = useCallback(async () => {
     if (!slug || loading || !hasMore) return;
 
@@ -31,7 +31,7 @@ const Category = () => {
 
       const data = await res.json();
 
-      // 🟩 ثبت زیرمجموعه‌ها فقط در بار اول
+      // ثبت زیرمجموعه‌ها فقط در اولین بار
       if (page === 1 && data.subcategories && Array.isArray(data.subcategories)) {
         setSubcategories(data.subcategories);
       }
@@ -54,7 +54,7 @@ const Category = () => {
     }
   }, [slug, page, hasMore, loading]);
 
-  // 🔹 ریست وقتی دسته عوض میشه
+  // 🔹 ریست هنگام تغییر دسته
   useEffect(() => {
     setProducts([]);
     setSubcategories([]);
@@ -62,7 +62,7 @@ const Category = () => {
     setHasMore(true);
   }, [slug]);
 
-  // 🔹 infinite scroll
+  // 🔹 اسکرول بی‌نهایت
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -102,7 +102,7 @@ const Category = () => {
           </div>
         </div>
 
-        {/* 🔹 نمایش زیرمجموعه‌ها */}
+        {/* 🔹 زیرمجموعه‌ها */}
         {subcategories.length > 0 && (
           <div className="product-catagories-wrapper py-3">
             <div className="container">
@@ -148,7 +148,7 @@ const Category = () => {
           </div>
         )}
 
-        {/* 🔸 لیست محصولات */}
+        {/* 🔸 محصولات */}
         <div className="top-products-area pb-3">
           <div className="container">
             <div className="section-heading rtl-text-right">
@@ -158,14 +158,31 @@ const Category = () => {
               {products.map((item: any, i: number) => (
                 <div key={i} className="col-6 col-md-4">
                   <div className="card product-card">
-                    <div className="card-body text-center">
+                    <div className="card-body">
+                      {/* بنر */}
+                      {item.badge_text && (
+                        <span
+                          className={`badge rounded-pill badge-${
+                            item.badge_color || "primary"
+                          }`}
+                        >
+                          {item.badge_text}
+                        </span>
+                      )}
+
+                      {/* دکمه علاقه‌مندی */}
+                      <a className="wishlist-btn" href="#">
+                        <i className="ti ti-heart"></i>
+                      </a>
+
+                      {/* تصویر */}
                       <Link
                         className="product-thumbnail d-block"
                         to={`/single-product/${item.slug}`}
                       >
                         <img
-                          className="mb-2 rounded"
-                          src={item.thumb}
+                          className="mb-2"
+                          src={item.thumb || "/placeholder.png"}
                           alt={item.name}
                           style={{
                             width: "100%",
@@ -175,19 +192,46 @@ const Category = () => {
                         />
                       </Link>
 
+                      {/* عنوان */}
                       <Link
                         className="product-title d-block mb-1"
-                        to={`/product/${item.slug}`}
+                        to={`/single-product/${item.slug}`}
                       >
                         {item.name}
                       </Link>
 
+                      {/* قیمت */}
                       <p className="sale-price mb-2">
-                        {Math.floor(item.base_price).toLocaleString()} تومان
+                        {item.discount_price ? (
+                          <>
+                            {Number(item.discount_price).toLocaleString("fa-IR")}{" "}
+                            تومان
+                            <span className="original-price">
+                              {Number(item.price || item.base_price).toLocaleString(
+                                "fa-IR"
+                              )}{" "}
+                              تومان
+                            </span>
+                          </>
+                        ) : (
+                          `${Number(
+                            item.price || item.base_price
+                          ).toLocaleString("fa-IR")} تومان`
+                        )}
                       </p>
 
+                      {/* امتیاز */}
+                      <div className="product-rating">
+                        <i className="ti ti-star-filled"></i>
+                        <i className="ti ti-star-filled"></i>
+                        <i className="ti ti-star-filled"></i>
+                        <i className="ti ti-star-filled"></i>
+                        <i className="ti ti-star-filled"></i>
+                      </div>
+
+                      {/* دکمه افزودن به سبد */}
                       <a className="btn btn-primary btn-sm" href="#">
-                        افزودن به سبد
+                        <i className="ti ti-plus"></i>
                       </a>
                     </div>
                   </div>
@@ -197,7 +241,9 @@ const Category = () => {
 
             {loading && <p className="text-center mt-3">در حال بارگذاری...</p>}
             {!hasMore && products.length > 0 && (
-              <p className="text-center mt-2 text-muted">پایان لیست محصولات</p>
+              <p className="text-center mt-2 text-muted">
+                پایان لیست محصولات
+              </p>
             )}
             <div ref={loader}></div>
           </div>
