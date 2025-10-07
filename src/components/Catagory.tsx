@@ -84,7 +84,7 @@ return (
 <>
 <HeaderThree
 links="home"
-title={name ? name.toUpperCase() : "CATEGORIES"}
+title={slug ? slug.toUpperCase() : "CATEGORIES"}
 />
 
 <div className="page-content-wrapper">  
@@ -259,5 +259,6 @@ title={name ? name.toUpperCase() : "CATEGORIES"}
 };
 
 export default Category;
+
 
 
