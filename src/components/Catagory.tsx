@@ -10,9 +10,9 @@ const PAGE_SIZE = 18;
 
 const Category = () => {
   const { slug } = useParams();
-  const [categoryName, setCategoryName] = useState<string>(""); // 👈 برای نام دسته
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [categoryName, setCategoryName] = useState<string>(""); // 🟩 نام دسته
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -26,26 +26,20 @@ const Category = () => {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASEURL}/api/products/categories/${slug}?page=${page}&page_size=${PAGE_SIZE}`
+        `${BASEURL}/api/products/categories/${slug}/?page=${page}&page_size=${PAGE_SIZE}`
       );
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const data = await res.json();
 
-      // ✅ تنظیم نام دسته در اولین بار
-      if (page === 1) {
-        if (data.category && data.category.name) {
-          setCategoryName(data.category.name);
-        } else if (data.name) {
-          setCategoryName(data.name);
-        } else {
-          setCategoryName(slug);
-        }
-      }
-
-      // ✅ زیرمجموعه‌ها فقط در بار اول
+      // ثبت زیرمجموعه‌ها فقط در اولین بار
       if (page === 1 && data.subcategories && Array.isArray(data.subcategories)) {
         setSubcategories(data.subcategories);
+      }
+
+      // نام دسته را از اولین محصول بگیر
+      if (page === 1 && data.data?.length > 0 && data.data[0].category) {
+        setCategoryName(data.data[0].category);
       }
 
       const newProducts = Array.isArray(data.data)
@@ -72,7 +66,7 @@ const Category = () => {
     setSubcategories([]);
     setPage(1);
     setHasMore(true);
-    setCategoryName("");
+    setCategoryName(""); // ریست نام دسته
   }, [slug]);
 
   // 🔹 اسکرول بی‌نهایت
@@ -93,10 +87,9 @@ const Category = () => {
 
   return (
     <>
-      {/* 👇 حالا به‌جای slug، نام دسته را نشان می‌دهد */}
       <HeaderThree
         links="home"
-        title={categoryName || slug?.toUpperCase() || "CATEGORIES"}
+        title={categoryName || "در حال بارگذاری..."} // 🟩 نمایش نام دسته
       />
 
       <div className="page-content-wrapper">
@@ -173,6 +166,7 @@ const Category = () => {
                 <div key={i} className="col-6 col-md-4">
                   <div className="card product-card">
                     <div className="card-body">
+                      {/* بنر */}
                       {item.badge_text && (
                         <span
                           className={`badge rounded-pill badge-${
@@ -182,9 +176,13 @@ const Category = () => {
                           {item.badge_text}
                         </span>
                       )}
+
+                      {/* دکمه علاقه‌مندی */}
                       <a className="wishlist-btn" href="#">
                         <i className="ti ti-heart"></i>
                       </a>
+
+                      {/* تصویر */}
                       <Link
                         className="product-thumbnail d-block"
                         to={`/single-product/${item.slug}`}
@@ -200,60 +198,17 @@ const Category = () => {
                           }}
                         />
                       </Link>
+
+                      {/* عنوان */}
                       <Link
                         className="product-title d-block mb-1"
                         to={`/single-product/${item.slug}`}
                       >
                         {item.name}
                       </Link>
+
+                      {/* قیمت */}
                       <p className="sale-price mb-2">
                         {item.discount_price ? (
                           <>
-                            {Number(item.discount_price).toLocaleString("fa-IR")}{" "}
-                            تومان
-                            <span className="original-price">
-                              {Number(item.price || item.base_price).toLocaleString(
-                                "fa-IR"
-                              )}{" "}
-                              تومان
-                            </span>
-                          </>
-                        ) : (
-                          `${Number(
-                            item.price || item.base_price
-                          ).toLocaleString("fa-IR")} تومان`
-                        )}
-                      </p>
-                      <div className="product-rating">
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                        <i className="ti ti-star-filled"></i>
-                      </div>
-                      <a className="btn btn-primary btn-sm" href="#">
-                        <i className="ti ti-plus"></i>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {loading && <p className="text-center mt-3">در حال بارگذاری...</p>}
-            {!hasMore && products.length > 0 && (
-              <p className="text-center mt-2 text-muted">
-                پایان لیست محصولات
-              </p>
-            )}
-            <div ref={loader}></div>
-          </div>
-        </div>
-      </div>
-
-      <Footer />
-    </>
-  );
-};
-
-export default Category;
+                            {Number(item
