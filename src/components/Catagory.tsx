@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import HeaderThree from "./HeaderThree";
+import HeaderThree from "../layouts/HeaderThree";
 
 interface Category {
   id: number;
@@ -66,3 +66,4 @@ const Category: React.FC = () => {
 };
 
 export default Category;
+
