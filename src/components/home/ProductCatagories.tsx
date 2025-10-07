@@ -7,7 +7,7 @@ const [categories, setCategories] = useState([]);
 useEffect(() => {
 async function fetchData() {
 try {
-const res = await fetch(${BASEURL}/api/products/categories/);
+const res = await fetch(`${BASEURL}/api/products/categories/`);
 const data = await res.json();
 setCategories(data);
 } catch (error) {
@@ -55,4 +55,5 @@ return (
 };
 
 export default ProductCatagories;
+
 
