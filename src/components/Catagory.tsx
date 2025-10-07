@@ -10,6 +10,7 @@ const PAGE_SIZE = 18;
 
 const Category = () => {
   const { slug } = useParams();
+  const [categoryName, setCategoryName] = useState<string>("");
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,18 @@ const Category = () => {
 
       const data = await res.json();
 
-      // ثبت زیرمجموعه‌ها فقط در اولین بار
+      // ✅ تنظیم نام دسته (در اولین بار)
+      if (page === 1) {
+        if (data.category && data.category.name) {
+          setCategoryName(data.category.name);
+        } else if (data.name) {
+          setCategoryName(data.name);
+        } else {
+          setCategoryName(slug);
+        }
+      }
+
+      // ✅ زیرمجموعه‌ها فقط بار اول
       if (page === 1 && data.subcategories && Array.isArray(data.subcategories)) {
         setSubcategories(data.subcategories);
       }
@@ -60,6 +72,7 @@ const Category = () => {
     setSubcategories([]);
     setPage(1);
     setHasMore(true);
+    setCategoryName("");
   }, [slug]);
 
   // 🔹 اسکرول بی‌نهایت
@@ -82,7 +95,7 @@ const Category = () => {
     <>
       <HeaderThree
         links="home"
-        title={slug ? slug.toUpperCase() : "CATEGORIES"}
+        title={categoryName || slug?.toUpperCase() || "CATEGORIES"}
       />
 
       <div className="page-content-wrapper">
