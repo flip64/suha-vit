@@ -1,69 +1,238 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+"use client";
+
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Link, useParams } from "react-router-dom";
 import HeaderThree from "../layouts/HeaderThree";
+import Footer from "../layouts/Footer";
+import { BASEURL } from "../config";
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  image?: string;
-}
+const PAGE_SIZE = 18;
 
-const Category: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
-  const [category, setCategory] = useState<Category | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+const Category = () => {
+  const { slug } = useParams();
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [categoryName, setCategoryName] = useState<string>("");
 
-  useEffect(() => {
-    if (!slug) return;
+  const loader = useRef<HTMLDivElement>(null);
 
-    const fetchCategory = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`https://backend.bazbia.ir/api/categories/${slug}/`);
-        if (!res.ok) throw new Error("خطا در دریافت اطلاعات دسته");
-        const data = await res.json();
-        setCategory(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  // 🟩 دریافت محصولات و زیرمجموعه‌ها
+  const loadProducts = useCallback(async () => {
+    if (!slug || loading || !hasMore) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${BASEURL}/api/products/categories/${slug}?page=${page}&page_size=${PAGE_SIZE}`
+      );
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+      const data = await res.json();
+
+      // ثبت نام دسته و زیرمجموعه‌ها فقط در اولین بار
+      if (page === 1) {
+        if (data.subcategories && Array.isArray(data.subcategories)) {
+          setSubcategories(data.subcategories);
+        }
+        if (data.data && data.data.length > 0) {
+          setCategoryName(data.data[0].category || slug);
+        }
       }
-    };
 
-    fetchCategory();
+      const newProducts = Array.isArray(data.data)
+        ? data.data
+        : data.results || [];
+
+      if (newProducts.length > 0) {
+        setProducts((prev) => [...prev, ...newProducts]);
+        setPage((prev) => prev + 1);
+        if (!data.next) setHasMore(false);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("خطا در دریافت محصولات:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [slug, page, hasMore, loading]);
+
+  // 🔹 ریست هنگام تغییر دسته
+  useEffect(() => {
+    setProducts([]);
+    setSubcategories([]);
+    setPage(1);
+    setHasMore(true);
+    setCategoryName("");
   }, [slug]);
 
-  if (loading) return <p className="text-center mt-8">در حال بارگذاری...</p>;
-  if (error) return <p className="text-center text-red-500 mt-8">{error}</p>;
-  if (!category) return <p className="text-center mt-8">دسته‌ای یافت نشد</p>;
+  // 🔹 اسکرول بی‌نهایت
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadProducts();
+      },
+      { threshold: 0.2 }
+    );
+
+    if (loader.current) observer.observe(loader.current);
+
+    return () => {
+      if (loader.current) observer.unobserve(loader.current);
+    };
+  }, [loadProducts]);
 
   return (
-    <div>
+    <>
       <HeaderThree
         links="home"
-        title={category.name ? category.name : "دسته‌ها"}
+        title={categoryName || slug?.toUpperCase() || "CATEGORIES"}
       />
 
-      <div className="max-w-6xl mx-auto mt-6 p-4">
-        {category.image && (
-          <img
-            src={category.image}
-            alt={category.name}
-            className="w-full rounded-2xl shadow-md mb-6"
-          />
+      <div className="page-content-wrapper">
+        {/* 🔸 تصویر بالای صفحه */}
+        <div className="pt-3">
+          <div className="container">
+            <div
+              className="catagory-single-img"
+              style={{
+                backgroundImage: `url(/assets/img/bg-img/5.jpg)`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "180px",
+                borderRadius: "16px",
+              }}
+            ></div>
+          </div>
+        </div>
+
+        {/* 🔹 زیرمجموعه‌ها */}
+        {subcategories.length > 0 && (
+          <div className="product-catagories-wrapper py-3">
+            <div className="container">
+              <div className="section-heading rtl-text-right">
+                <h6>زیرمجموعه‌ها</h6>
+              </div>
+              <div className="product-catagory-wrap">
+                <div className="row g-2 rtl-flex-d-row-r">
+                  {subcategories.map((cat: any, i: number) => (
+                    <div key={i} className="col-4 col-md-3">
+                      <div className="card catagory-card">
+                        <div className="card-body px-2 text-center">
+                          <Link to={`/catagory/${cat.slug}`}>
+                            {cat.image ? (
+                              <img
+                                src={cat.image}
+                                alt={cat.name}
+                                className="mb-2 rounded"
+                                style={{
+                                  width: "100%",
+                                  height: "80px",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  background: "#f3f3f3",
+                                  height: "80px",
+                                  borderRadius: "8px",
+                                }}
+                              ></div>
+                            )}
+                            <span className="d-block mt-1">{cat.name}</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
-        <h2 className="text-2xl font-semibold mb-3 text-center">
-          {category.name}
-        </h2>
-        <p className="text-gray-500 text-center">
-          محصولات مرتبط با دسته "{category.name}"
-        </p>
+
+        {/* 🔸 محصولات */}
+        <div className="top-products-area pb-3">
+          <div className="container">
+            <div className="section-heading rtl-text-right">
+              <h6>محصولات</h6>
+            </div>
+            <div className="row g-2 rtl-flex-d-row-r">
+              {products.map((item: any, i: number) => (
+                <div key={i} className="col-6 col-md-4">
+                  <div className="card product-card">
+                    <div className="card-body">
+                      {/* تصویر */}
+                      <Link
+                        className="product-thumbnail d-block"
+                        to={`/single-product/${item.slug}`}
+                      >
+                        <img
+                          className="mb-2"
+                          src={item.thumb || "/placeholder.png"}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "160px",
+                            objectFit: "contain",
+                          }}
+                        />
+                      </Link>
+
+                      {/* عنوان */}
+                      <Link
+                        className="product-title d-block mb-1"
+                        to={`/single-product/${item.slug}`}
+                      >
+                        {item.name}
+                      </Link>
+
+                      {/* قیمت */}
+                      <p className="sale-price mb-2">
+                        {item.discount_price ? (
+                          <>
+                            {Number(item.discount_price).toLocaleString("fa-IR")}{" "}
+                            تومان
+                            <span className="original-price">
+                              {Number(item.price || item.base_price).toLocaleString(
+                                "fa-IR"
+                              )}{" "}
+                              تومان
+                            </span>
+                          </>
+                        ) : (
+                          `${Number(item.price || item.base_price).toLocaleString(
+                            "fa-IR"
+                          )} تومان`
+                        )}
+                      </p>
+
+                      {/* دکمه افزودن به سبد */}
+                      <a className="btn btn-primary btn-sm" href="#">
+                        <i className="ti ti-plus"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {loading && <p className="text-center mt-3">در حال بارگذاری...</p>}
+            {!hasMore && products.length > 0 && (
+              <p className="text-center mt-2 text-muted">پایان لیست محصولات</p>
+            )}
+            <div ref={loader}></div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 };
 
 export default Category;
-
