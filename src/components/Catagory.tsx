@@ -258,5 +258,6 @@ title={slug ? slug.toUpperCase() : "CATEGORIES"}
 );
 };
 
-export default Category;بالای صفحه اسلام رو می‌نویسه درسته ؟
+export default Category;
+
 
