@@ -9,8 +9,8 @@ import { BASEURL } from "../config";
 const PAGE_SIZE = 18;
 
 const Category = () => {
-  const { slug } = useParams(); // گرفتن slug دسته از url
-  const [categories, setCategories] = useState<any[]>([]);
+  const { slug } = useParams();
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -18,17 +18,9 @@ const Category = () => {
 
   const loader = useRef<HTMLDivElement>(null);
 
-  // گرفتن دسته‌بندی‌ها از API
-  useEffect(() => {
-    fetch(`${BASEURL}/api/products/categories`)
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => console.error(err));
-  }, []);
-
-  // بارگذاری محصولات دسته‌بندی‌شده با صفحه‌بندی
+  // 🔹 تابع دریافت محصولات و زیرمجموعه‌ها
   const loadProducts = useCallback(async () => {
-    if (!slug || !hasMore || loading) return;
+    if (!slug || loading || !hasMore) return;
 
     setLoading(true);
     try {
@@ -36,12 +28,19 @@ const Category = () => {
         `${BASEURL}/api/products/categories/${slug}?page=${page}&page_size=${PAGE_SIZE}`
       );
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
       const data = await res.json();
 
-      // اگر API شما pagination داره، احتمالا data.results هست
-      const newProducts = Array.isArray(data.data) ? data.data : data.results;
+      // 🟩 ثبت زیرمجموعه‌ها فقط در بار اول
+      if (page === 1 && data.subcategories && Array.isArray(data.subcategories)) {
+        setSubcategories(data.subcategories);
+      }
 
-      if (newProducts && newProducts.length > 0) {
+      const newProducts = Array.isArray(data.data)
+        ? data.data
+        : data.results || [];
+
+      if (newProducts.length > 0) {
         setProducts((prev) => [...prev, ...newProducts]);
         setPage((prev) => prev + 1);
         if (!data.next) setHasMore(false);
@@ -55,20 +54,19 @@ const Category = () => {
     }
   }, [slug, page, hasMore, loading]);
 
-  // ریست کردن وقتی دسته تغییر کنه
+  // 🔹 ریست وقتی دسته عوض میشه
   useEffect(() => {
     setProducts([]);
+    setSubcategories([]);
     setPage(1);
     setHasMore(true);
   }, [slug]);
 
-  // intersection observer برای infinite scroll
+  // 🔹 infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          loadProducts();
-        }
+        if (entries[0].isIntersecting) loadProducts();
       },
       { threshold: 0.2 }
     );
@@ -82,95 +80,122 @@ const Category = () => {
 
   return (
     <>
-      <HeaderThree links="home" title={slug ? slug.toUpperCase() : "Categories"} />
+      <HeaderThree
+        links="home"
+        title={slug ? slug.toUpperCase() : "CATEGORIES"}
+      />
 
       <div className="page-content-wrapper">
-        {/* تصویر هدر */}
+        {/* 🔸 تصویر بالای صفحه */}
         <div className="pt-3">
           <div className="container">
             <div
               className="catagory-single-img"
-              style={{ backgroundImage: `url(/assets/img/bg-img/5.jpg)` }}
+              style={{
+                backgroundImage: `url(/assets/img/bg-img/5.jpg)`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "180px",
+                borderRadius: "16px",
+              }}
             ></div>
           </div>
         </div>
 
-        {/* لیست دسته‌بندی‌ها */}
-        <div className="product-catagories-wrapper py-3">
-          <div className="container">
-            <div className="section-heading rtl-text-right">
-              <h6> زیر مجموعه</h6>
-            </div>
-            <div className="product-catagory-wrap">
-              <div className="row g-2 rtl-flex-d-row-r">
-                {categories.length > 0 ? (
-                  categories.map((cat: any, i: number) => (
-                    <div key={i} className="col-3">
+        {/* 🔹 نمایش زیرمجموعه‌ها */}
+        {subcategories.length > 0 && (
+          <div className="product-catagories-wrapper py-3">
+            <div className="container">
+              <div className="section-heading rtl-text-right">
+                <h6>زیرمجموعه‌ها</h6>
+              </div>
+              <div className="product-catagory-wrap">
+                <div className="row g-2 rtl-flex-d-row-r">
+                  {subcategories.map((cat: any, i: number) => (
+                    <div key={i} className="col-4 col-md-3">
                       <div className="card catagory-card">
-                        <div className="card-body px-2">
+                        <div className="card-body px-2 text-center">
                           <Link to={`/catagory/${cat.slug}`}>
-                            <img src={cat.image} alt={cat.name} />
-                            <span>{cat.name}</span>
+                            {cat.image ? (
+                              <img
+                                src={cat.image}
+                                alt={cat.name}
+                                className="mb-2 rounded"
+                                style={{
+                                  width: "100%",
+                                  height: "80px",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  background: "#f3f3f3",
+                                  height: "80px",
+                                  borderRadius: "8px",
+                                }}
+                              ></div>
+                            )}
+                            <span className="d-block mt-1">{cat.name}</span>
                           </Link>
                         </div>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-center">هیچ دسته‌ای یافت نشد.</p>
-                )}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* محصولات */}
+        {/* 🔸 لیست محصولات */}
         <div className="top-products-area pb-3">
           <div className="container">
             <div className="section-heading rtl-text-right">
-              <h6>Products</h6>
+              <h6>محصولات</h6>
             </div>
             <div className="row g-2 rtl-flex-d-row-r">
               {products.map((item: any, i: number) => (
                 <div key={i} className="col-6 col-md-4">
                   <div className="card product-card">
-                    <div className="card-body">
-                      {item.badge_text && (
-                        <span className={`badge rounded-pill badge-${item.badge_color}`}>
-                          {item.badge_text}
-                        </span>
-                      )}
-
-                      <a className="wishlist-btn" href="#">
-                        <i className="ti ti-heart"></i>
-                      </a>
-
-                      <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
-                        <img className="mb-2" src={item.thumb} alt={item.name} />
+                    <div className="card-body text-center">
+                      <Link
+                        className="product-thumbnail d-block"
+                        to={`/single-product/${item.slug}`}
+                      >
+                        <img
+                          className="mb-2 rounded"
+                          src={item.thumb}
+                          alt={item.name}
+                          style={{
+                            width: "100%",
+                            height: "160px",
+                            objectFit: "contain",
+                          }}
+                        />
                       </Link>
 
-                      <Link className="product-title" to={`/product/${item.slug}`}>
+                      <Link
+                        className="product-title d-block mb-1"
+                        to={`/product/${item.slug}`}
+                      >
                         {item.name}
                       </Link>
 
-                      <p className="sale-price">
+                      <p className="sale-price mb-2">
                         {Math.floor(item.base_price).toLocaleString()} تومان
                       </p>
 
-                      <div className="product-rating">
-                        {[...Array(5)].map((_, idx) => (
-                          <i key={idx} className="ti ti-star-filled"></i>
-                        ))}
-                      </div>
                       <a className="btn btn-primary btn-sm" href="#">
-                        <i className="ti ti-plus"></i>
+                        افزودن به سبد
                       </a>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            {loading && <p className="text-center">Loading...</p>}
+
+            {loading && <p className="text-center mt-3">در حال بارگذاری...</p>}
             {!hasMore && products.length > 0 && (
               <p className="text-center mt-2 text-muted">پایان لیست محصولات</p>
             )}
@@ -185,4 +210,3 @@ const Category = () => {
 };
 
 export default Category;
-
