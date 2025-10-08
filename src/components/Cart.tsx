@@ -31,6 +31,7 @@ const Cart = () => {
       });
       if (!res.ok) throw new Error("خطا در دریافت سبد خرید");
       const data = await res.json();
+      console.log(data)
       setCart(data.items || []);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
@@ -175,3 +176,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
