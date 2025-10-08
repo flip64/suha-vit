@@ -16,6 +16,7 @@ interface CartItem {
   total_price: number;
   image?: string | null;
   updating?: boolean;
+  attributes?: string; // رشته ترکیبی از ویژگی‌ها
 }
 
 const Cart = () => {
@@ -23,26 +24,49 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("accessToken");
 
+  // 🔹 wrapper برای fetch JSON
+  const fetchJSON = async (url: string, options: any = {}) => {
+    const res = await fetch(url, {
+      ...options,
+      credentials: "include", // مهم برای session
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+        ...(options.headers || {}),
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text);
+    }
+    return res.json();
+  };
+
   // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-      const data = await res.json();
+      const data = await fetchJSON(`${BASEURL}/api/orders/cart/`);
+      
+      const cartItems: CartItem[] = (data.items || []).map((item: any) => {
+        let productName = "";
+        let attributes = "";
 
-      // اصلاح نام محصول فقط به رشته
-      const cartItems = (data.items || []).map((item: any) => ({
-        ...item,
-        product_name:
-          typeof item.product_name === "string"
-            ? item.product_name
-            : item.product_name.fa || item.product_name.en || "بدون نام",
-      }));
+        if (typeof item.product_name === "string") {
+          productName = item.product_name;
+        } else if (item.product_name?.product) {
+          productName = item.product_name.product.name || "بدون نام";
+          if (item.product_name.attributes?.length) {
+            attributes = item.product_name.attributes.map((a: any) => a.value).join(" ");
+          }
+        }
+
+        return {
+          ...item,
+          product_name: `${productName} ${attributes}`.trim(),
+        };
+      });
+
       setCart(cartItems);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
@@ -66,15 +90,10 @@ const Cart = () => {
     );
 
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+      await fetchJSON(`${BASEURL}/api/orders/cart/`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify({ variant_id, quantity }),
       });
-      await res.json();
 
       setCart(prev =>
         prev.map(item =>
@@ -107,15 +126,10 @@ const Cart = () => {
     );
 
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+      await fetchJSON(`${BASEURL}/api/orders/cart/`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
         body: JSON.stringify({ variant_id }),
       });
-      await res.json();
 
       setCart(prev => prev.filter(item => item.variant !== variant_id));
     } catch (err) {
@@ -242,4 +256,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
