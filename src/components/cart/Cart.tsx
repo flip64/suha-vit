@@ -23,7 +23,7 @@ const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("accessToken");
-
+  console.log("🗝️ Token:", token);
   // ✅ تابع fetch با لاگ‌گیری کامل
   const fetchJSON = async (url: string, options: any = {}) => {
     console.log("🌍 Fetch start:", url);
@@ -186,3 +186,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
