@@ -5,7 +5,8 @@ import { Link } from "react-router-dom";
 import Footer from "../../layouts/Footer";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../../config";
-import "./Cart.css"
+import "./Cart.css";
+
 interface CartItem {
   id: number;
   variant: number;
@@ -14,7 +15,7 @@ interface CartItem {
   price: number;
   total_price: number;
   image?: string | null;
-  updating?: boolean; // برای نمایش loading هنگام آپدیت تعداد
+  updating?: boolean;
 }
 
 const Cart = () => {
@@ -33,9 +34,15 @@ const Cart = () => {
         },
       });
       const data = await res.json();
-      console.log("Cart data:", data);
 
-      const cartItems = data.items ? data.items : Array.isArray(data) ? data : [];
+      // اصلاح نام محصول فقط به رشته
+      const cartItems = (data.items || []).map((item: any) => ({
+        ...item,
+        product_name:
+          typeof item.product_name === "string"
+            ? item.product_name
+            : item.product_name.fa || item.product_name.en || "بدون نام",
+      }));
       setCart(cartItems);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
@@ -67,10 +74,8 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id, quantity }),
       });
-      const data = await res.json();
-      console.log("PATCH response:", data);
+      await res.json();
 
-      // آپدیت محلی state
       setCart(prev =>
         prev.map(item =>
           item.variant === variant_id
@@ -110,8 +115,7 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id }),
       });
-      const data = await res.json();
-      console.log("DELETE response:", data);
+      await res.json();
 
       setCart(prev => prev.filter(item => item.variant !== variant_id));
     } catch (err) {
@@ -124,7 +128,10 @@ const Cart = () => {
     }
   };
 
-  const total = cart.reduce((acc, item) => acc + (item.total_price || item.price * item.quantity), 0);
+  const total = cart.reduce(
+    (acc, item) => acc + (item.total_price || item.price * item.quantity),
+    0
+  );
 
   return (
     <>
@@ -156,13 +163,6 @@ const Cart = () => {
                               <img
                                 src={item.image}
                                 alt={item.product_name}
-                                style={{
-                                  width: "60px",
-                                  height: "60px",
-                                  objectFit: "cover",
-                                  borderRadius: "8px",
-                                  marginLeft: "10px",
-                                }}
                               />
                             )}
                             <div>
@@ -172,7 +172,7 @@ const Cart = () => {
                               >
                                 {item.product_name}
                               </Link>
-                              <div className="cart-price-qty mt-1 d-flex align-items-center gap-2">
+                              <div className="cart-price-qty mt-1 d-flex align-items-center">
                                 <button
                                   className="qty-btn"
                                   onClick={() =>
@@ -205,7 +205,10 @@ const Cart = () => {
                             </div>
                           </td>
                           <td className="cart-total-price">
-                            {item.updating ? "..." : (item.total_price || item.price * item.quantity).toLocaleString()} تومان
+                            {item.updating
+                              ? "..."
+                              : (item.total_price || item.price * item.quantity).toLocaleString()}{" "}
+                            تومان
                           </td>
                         </tr>
                       ))}
@@ -239,5 +242,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
-
