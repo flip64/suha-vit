@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import { BASEURL } from "../config";
 
 interface CartItem {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
+  id: number;           // آیتم سبد
+  variant: number;      // آیتم واریانت
+  product_name: string; // نام محصول
   quantity: number;
-  maxQuantity: number;
+  price: number;
+  total_price: number;
 }
 
 const Cart = () => {
@@ -22,7 +22,6 @@ const Cart = () => {
 
   // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
-    console.log(`📡 [API] GET ${BASEURL}/api/orders/cart/`);
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
@@ -32,10 +31,9 @@ const Cart = () => {
       });
       if (!res.ok) throw new Error("خطا در دریافت سبد خرید");
       const data = await res.json();
-      console.log("✅ [API] Response GET Cart:", data);
       setCart(data.items || []);
     } catch (err) {
-      console.error("❌ [API] GET Cart Error:", err);
+      console.error("❌ GET Cart Error:", err);
     } finally {
       setLoading(false);
     }
@@ -45,44 +43,49 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // ✏️ تغییر تعداد یا حذف محصول
-  const updateCartItem = async (id: number, quantity: number) => {
-    console.log(`📡 [API] POST ${BASEURL}/api/orders/cart/`, { product_id: id, quantity });
+  // ✏️ بروزرسانی تعداد
+  const updateCartItem = async (variant_id: number, quantity: number) => {
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
-        method: "POST",
+      await fetch(`${BASEURL}/api/orders/cart/`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: token ? `Bearer ${token}` : "",
         },
-        body: JSON.stringify({ product_id: id, quantity }),
+        body: JSON.stringify({ variant_id, quantity }),
       });
-      if (!res.ok) throw new Error("خطا در بروزرسانی سبد خرید");
-      const data = await res.json();
-      console.log("✅ [API] Response POST Cart:", data);
       fetchCart(); // بروزرسانی سبد
     } catch (err) {
-      console.error("❌ [API] POST Cart Error:", err);
-    }
-  };
-
-  // 🔢 تغییر تعداد با محدودیت موجودی
-  const handleQuantityChange = (id: number, value: number, maxQuantity: number) => {
-    if (value > 0 && value <= maxQuantity) {
-      updateCartItem(id, value);
-    } else if (value > maxQuantity) {
-      alert(`حداکثر موجودی این محصول ${maxQuantity} عدد است.`);
-      updateCartItem(id, maxQuantity);
+      console.error("❌ PATCH Cart Error:", err);
     }
   };
 
   // 🗑️ حذف محصول
-  const removeFromCart = (id: number) => {
-    updateCartItem(id, 0);
+  const removeFromCart = async (variant_id: number) => {
+    try {
+      await fetch(`${BASEURL}/api/orders/cart/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({ variant_id }),
+      });
+      fetchCart();
+    } catch (err) {
+      console.error("❌ DELETE Cart Error:", err);
+    }
+  };
+
+  // 🔢 تغییر تعداد با محدودیت
+  const handleQuantityChange = (variant_id: number, value: number) => {
+    if (value > 0) {
+      updateCartItem(variant_id, value);
+    }
   };
 
   // 💰 جمع کل
-  const total = cart?.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0) || 0;
+  const total = cart?.reduce((acc, item) => acc + item.total_price, 0) || 0;
 
   return (
     <>
@@ -103,7 +106,7 @@ const Cart = () => {
                           <th scope="row">
                             <button
                               className="remove-product"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => removeFromCart(item.variant)}
                             >
                               ✖
                             </button>
@@ -111,33 +114,34 @@ const Cart = () => {
                           <td className="cart-product-image">
                             <img
                               className="rounded img-fluid"
-                              src={item.image}
-                              alt={item.name}
+                              src={`https://via.placeholder.com/100`} // اگر تصویر ندارید
+                              alt={item.product_name}
                             />
                           </td>
                           <td className="cart-product-info">
-                            <Link className="product-title" to={`/product/${item.id}`}>
-                              {item.name}
+                            <Link className="product-title" to={`/product/${item.variant}`}>
+                              {item.product_name}
                             </Link>
-                            <div className="cart-price-qty">
+                            <div className="cart-price-qty mt-1">
                               <span>
                                 {item.price.toLocaleString()} تومان ×{" "}
                                 <input
                                   type="number"
                                   min={1}
-                                  max={item.maxQuantity}
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleQuantityChange(
-                                      item.id,
-                                      Number(e.target.value) || 1,
-                                      item.maxQuantity
+                                      item.variant,
+                                      Number(e.target.value) || 1
                                     )
                                   }
                                   className="qty-input"
                                 />
                               </span>
                             </div>
+                          </td>
+                          <td className="cart-total-price">
+                            {item.total_price.toLocaleString()} تومان
                           </td>
                         </tr>
                       ))}
