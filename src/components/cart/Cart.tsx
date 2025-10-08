@@ -22,25 +22,18 @@ interface CartItem {
 const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const token = localStorage.getItem("accessToken");
-  console.log("🗝️ Token:", token);
-  // ✅ تابع fetch با لاگ‌گیری کامل
-  const fetchJSON = async (url: string, options: any = {}) => {
-    console.log("🌍 Fetch start:", url);
-    console.log("🧾 Options:", options);
 
+  // تابع fetch ساده بدون Authorization و credentials
+  const fetchJSON = async (url: string) => {
+    console.log("🌍 Fetch start:", url);
     try {
       const res = await fetch(url, {
-        ...options,
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-          ...(options.headers || {}),
         },
       });
 
-      console.log("📡 Response status:", res.status, res.statusText);
+      console.log("📡 Response status:", res.status);
 
       if (!res.ok) {
         const text = await res.text();
@@ -53,20 +46,22 @@ const Cart = () => {
       return data;
     } catch (error: any) {
       console.error("🚨 Fetch failed:", error);
-      console.log("🧠 Error message:", error.message);
-      console.log("🧩 Stack:", error.stack);
-      throw error;
+      return null;
     }
   };
 
-  // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
     console.log("🛒 Fetching cart data...");
     setLoading(true);
     try {
       const url = `${BASEURL}/api/orders/cart/`;
-      console.log("➡️ Cart API URL:", url);
       const data = await fetchJSON(url);
+
+      if (!data) {
+        console.error("❌ No data received");
+        setCart([]);
+        return;
+      }
 
       const cartItems: CartItem[] = (data.items || []).map((item: any) => {
         let productName = "";
@@ -87,10 +82,10 @@ const Cart = () => {
         };
       });
 
-      console.log("🧾 Parsed cart items:", cartItems);
       setCart(cartItems);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
+      setCart([]);
     } finally {
       setLoading(false);
       console.log("⏹️ Fetch cart finished");
@@ -98,7 +93,6 @@ const Cart = () => {
   };
 
   useEffect(() => {
-    console.log("⚙️ Cart component mounted");
     fetchCart();
   }, []);
 
@@ -186,4 +180,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
