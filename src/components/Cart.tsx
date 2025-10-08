@@ -7,9 +7,9 @@ import { useEffect, useState } from "react";
 import { BASEURL } from "../config";
 
 interface CartItem {
-  id: number;           // آیتم سبد
-  variant: number;      // آیتم واریانت
-  product_name: string; // نام محصول
+  id: number;           
+  variant: number;      
+  product_name: string; 
   quantity: number;
   price: number;
   total_price: number;
@@ -22,6 +22,9 @@ const Cart = () => {
 
   // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
+    console.log("📡 [API] GET Cart");
+    console.log("Token:", token);
+
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
@@ -29,9 +32,16 @@ const Cart = () => {
           Authorization: token ? `Bearer ${token}` : "",
         },
       });
-      if (!res.ok) throw new Error("خطا در دریافت سبد خرید");
-      const data = await res.json();
-      console.log(data)
+
+      console.log("Status:", res.status);
+      console.log("Status Text:", res.statusText);
+
+      const text = await res.text();
+      console.log("Raw Response:", text);
+
+      const data = JSON.parse(text);
+      console.log("Parsed Data:", data);
+
       setCart(data.items || []);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
@@ -46,8 +56,9 @@ const Cart = () => {
 
   // ✏️ بروزرسانی تعداد
   const updateCartItem = async (variant_id: number, quantity: number) => {
+    console.log(`📡 [PATCH] variant_id: ${variant_id}, quantity: ${quantity}`);
     try {
-      await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -55,7 +66,12 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id, quantity }),
       });
-      fetchCart(); // بروزرسانی سبد
+
+      console.log("PATCH Status:", res.status);
+      const text = await res.text();
+      console.log("PATCH Raw Response:", text);
+
+      fetchCart();
     } catch (err) {
       console.error("❌ PATCH Cart Error:", err);
     }
@@ -63,8 +79,9 @@ const Cart = () => {
 
   // 🗑️ حذف محصول
   const removeFromCart = async (variant_id: number) => {
+    console.log(`📡 [DELETE] variant_id: ${variant_id}`);
     try {
-      await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -72,20 +89,23 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id }),
       });
+
+      console.log("DELETE Status:", res.status);
+      const text = await res.text();
+      console.log("DELETE Raw Response:", text);
+
       fetchCart();
     } catch (err) {
       console.error("❌ DELETE Cart Error:", err);
     }
   };
 
-  // 🔢 تغییر تعداد با محدودیت
   const handleQuantityChange = (variant_id: number, value: number) => {
     if (value > 0) {
       updateCartItem(variant_id, value);
     }
   };
 
-  // 💰 جمع کل
   const total = cart?.reduce((acc, item) => acc + item.total_price, 0) || 0;
 
   return (
@@ -112,13 +132,6 @@ const Cart = () => {
                               ✖
                             </button>
                           </th>
-                          <td className="cart-product-image">
-                            <img
-                              className="rounded img-fluid"
-                              src={`https://via.placeholder.com/100`} // اگر تصویر ندارید
-                              alt={item.product_name}
-                            />
-                          </td>
                           <td className="cart-product-info">
                             <Link className="product-title" to={`/product/${item.variant}`}>
                               {item.product_name}
@@ -176,4 +189,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
