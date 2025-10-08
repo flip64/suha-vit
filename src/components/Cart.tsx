@@ -1,8 +1,8 @@
 "use client";
 
 import HeaderTwo from "../layouts/HeaderTwo";
-import { Link } from "react-router-dom";
 import Footer from "../layouts/Footer";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../config";
 
@@ -20,9 +20,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("accessToken");
 
-  // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
-    console.log("📡 [API] GET", `${BASEURL}/api/orders/cart/`);
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
@@ -32,10 +30,9 @@ const Cart = () => {
       });
       if (!res.ok) throw new Error("خطا در دریافت سبد خرید");
       const data = await res.json();
-      console.log("✅ [API] Response GET Cart:", data);
-      setCart(data.items || []);
+      setCart(Array.isArray(data.items) ? data.items : []);
     } catch (err) {
-      console.error("❌ [API] GET Cart Error:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -45,9 +42,7 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // ✏️ تغییر تعداد یا حذف محصول
   const updateCartItem = async (id: number, quantity: number) => {
-    console.log("📡 [API] POST", `${BASEURL}/api/orders/cart/`, { product_id: id, quantity });
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "POST",
@@ -57,16 +52,14 @@ const Cart = () => {
         },
         body: JSON.stringify({ product_id: id, quantity }),
       });
-      if (!res.ok) throw new Error("خطا در بروزرسانی سبد خرید");
-      const data = await res.json();
-      console.log("✅ [API] Response POST Cart:", data);
-      fetchCart(); // بروزرسانی سبد
+      if (res.ok) fetchCart();
     } catch (err) {
-      console.error("❌ [API] POST Cart Error:", err);
+      console.error(err);
     }
   };
 
-  // 🔢 تغییر تعداد با محدودیت موجودی
+  const removeFromCart = (id: number) => updateCartItem(id, 0);
+
   const handleQuantityChange = (id: number, value: number, maxQuantity: number) => {
     if (value > 0 && value <= maxQuantity) {
       updateCartItem(id, value);
@@ -76,96 +69,107 @@ const Cart = () => {
     }
   };
 
-  // 🗑️ حذف محصول
-  const removeFromCart = (id: number) => {
-    updateCartItem(id, 0); // مقدار 0 → حذف
-  };
-
-  // 💰 جمع کل
   const total = cart.reduce((acc, item) => acc + (item.price || 0) * item.quantity, 0);
 
   return (
     <>
-      <HeaderTwo links="shop-grid" title="My Cart" />
+      <HeaderTwo title="سبد خرید من" links="shop-grid" />
 
-      <div className="page-content-wrapper">
-        <div className="container">
-          <div className="cart-wrapper-area py-3">
-            <div className="cart-table card mb-3">
-              <div className="table-responsive card-body">
-                {loading ? (
-                  <p className="text-center">در حال بارگذاری...</p>
-                ) : (
-                  <table className="table mb-0">
-                    <tbody>
-                      {cart.length > 0 ? (
-                        cart.map((item) => (
-                          <tr key={item.id}>
-                            <th scope="row">
-                              <button
-                                className="remove-product"
-                                onClick={() => removeFromCart(item.id)}
-                              >
-                                <i className="ti ti-x"></i>
-                              </button>
-                            </th>
-                            <td>
-                              <img className="rounded img-fluid" src={item.image} alt={item.name} />
-                            </td>
-                            <td>
-                              <Link className="product-title" to={`/product/${item.id}`}>
-                                {item.name}
-                                <span className="mt-1">
-                                  {item.price} تومان × {item.quantity}
-                                </span>
-                              </Link>
-                            </td>
-                            <td>
-                              <div className="quantity">
-                                <input
-                                  className="qty-text"
-                                  type="number"
-                                  min={1}
-                                  max={item.maxQuantity}
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleQuantityChange(
-                                      item.id,
-                                      Number(e.target.value) || 1,
-                                      item.maxQuantity
-                                    )
-                                  }
-                                />
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={4} className="text-center">
-                            سبد خرید خالی است
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                )}
+      <div className="bg-gray-50 min-h-screen">
+        <div className="container mx-auto py-6 px-4 max-w-3xl">
+          {loading ? (
+            <p className="text-center text-gray-500">در حال بارگذاری...</p>
+          ) : cart.length > 0 ? (
+            <>
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white shadow-md rounded-2xl p-4 flex items-center justify-between"
+                  >
+                    <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <div>
+                        <Link
+                          to={`/product/${item.id}`}
+                          className="font-semibold text-gray-800 hover:text-blue-600"
+                        >
+                          {item.name}
+                        </Link>
+                        <p className="text-gray-500 text-sm mt-1">
+                          قیمت واحد: {item.price.toLocaleString()} تومان
+                        </p>
+                        <p className="text-gray-700 mt-1">
+                          جمع: {(item.price * item.quantity).toLocaleString()} تومان
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end space-y-2">
+                      <div className="flex items-center border rounded-xl overflow-hidden">
+                        <button
+                          className="px-3 py-1 bg-gray-100 hover:bg-gray-200"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1, item.maxQuantity)}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          min={1}
+                          max={item.maxQuantity}
+                          onChange={(e) =>
+                            handleQuantityChange(item.id, Number(e.target.value) || 1, item.maxQuantity)
+                          }
+                          className="w-10 text-center border-none outline-none"
+                        />
+                        <button
+                          className="px-3 py-1 bg-gray-100 hover:bg-gray-200"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1, item.maxQuantity)}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        className="text-red-500 text-sm hover:text-red-700"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
+
+              <div className="bg-white mt-6 shadow-md rounded-2xl p-4 flex items-center justify-between">
+                <h5 className="font-bold text-gray-800">
+                  مجموع: {total.toLocaleString()} تومان
+                </h5>
+                <Link
+                  to="/checkout"
+                  className="bg-blue-600 text-white py-2 px-6 rounded-xl hover:bg-blue-700"
+                >
+                  پرداخت
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-10 text-gray-500">
+              <i className="ti ti-shopping-cart text-4xl mb-2 block"></i>
+              <p>سبد خرید خالی است</p>
+              <Link
+                to="/shop-grid"
+                className="mt-3 inline-block bg-blue-600 text-white py-2 px-4 rounded-xl"
+              >
+                رفتن به فروشگاه
+              </Link>
             </div>
-
-            {cart.length > 0 && (
-              <div className="card cart-amount-area">
-                <div className="card-body d-flex align-items-center justify-content-between">
-                  <h5 className="total-price mb-0">
-                    مجموع: {total.toLocaleString()} تومان
-                  </h5>
-                  <Link className="btn btn-primary" to="/checkout">
-                    پرداخت
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
