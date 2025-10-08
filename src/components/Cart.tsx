@@ -7,12 +7,13 @@ import { useEffect, useState } from "react";
 import { BASEURL } from "../config";
 
 interface CartItem {
-  id: number;           
-  variant: number;      
-  product_name: string; 
+  id: number;
+  variant: number;
+  product_name: string;
   quantity: number;
   price: number;
   total_price: number;
+  image?: string | null; // ✅ اضافه شد
 }
 
 const Cart = () => {
@@ -132,26 +133,45 @@ const Cart = () => {
                               ✖
                             </button>
                           </th>
-                          <td className="cart-product-info">
-                            <Link className="product-title" to={`/product/${item.variant}`}>
-                              {item.product_name}
-                            </Link>
-                            <div className="cart-price-qty mt-1">
-                              <span>
-                                {item.price.toLocaleString()} تومان ×{" "}
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleQuantityChange(
-                                      item.variant,
-                                      Number(e.target.value) || 1
-                                    )
-                                  }
-                                  className="qty-input"
-                                />
-                              </span>
+                          <td className="cart-product-info d-flex align-items-center">
+                            {/* ✅ تصویر محصول */}
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.product_name}
+                                style={{
+                                  width: "60px",
+                                  height: "60px",
+                                  objectFit: "cover",
+                                  borderRadius: "8px",
+                                  marginLeft: "10px",
+                                }}
+                              />
+                            )}
+                            <div>
+                              <Link
+                                className="product-title"
+                                to={`/product/${item.variant}`}
+                              >
+                                {item.product_name}
+                              </Link>
+                              <div className="cart-price-qty mt-1">
+                                <span>
+                                  {item.price.toLocaleString()} تومان ×{" "}
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      handleQuantityChange(
+                                        item.variant,
+                                        Number(e.target.value) || 1
+                                      )
+                                    }
+                                    className="qty-input"
+                                  />
+                                </span>
+                              </div>
                             </div>
                           </td>
                           <td className="cart-total-price">
