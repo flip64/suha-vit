@@ -22,9 +22,9 @@ const token = localStorage.getItem("accessToken");
 
 // 📦 گرفتن سبد خرید
 const fetchCart = async () => {
-console.log("📡 [API] GET", ${BASEURL}/api/orders/cart/);
+console.log("📡 [API] GET", `${BASEURL}/api/orders/cart/)`;
 try {
-const res = await fetch(${BASEURL}/api/orders/cart/, {
+const res = await fetch(`${BASEURL}/api/orders/cart/`, {
 headers: {
 "Content-Type": "application/json",
 Authorization: token ? Bearer ${token} : "",
@@ -176,4 +176,5 @@ return (
 };
 
 export default Cart;
+
 
