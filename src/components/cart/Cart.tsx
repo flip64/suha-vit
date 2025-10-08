@@ -1,10 +1,10 @@
 "use client";
 
-import HeaderTwo from "../layouts/HeaderTwo";
+import HeaderTwo from "../../layouts/HeaderTwo";
 import { Link } from "react-router-dom";
-import Footer from "../layouts/Footer";
+import Footer from "../../layouts/Footer";
 import { useEffect, useState } from "react";
-import { BASEURL } from "../config";
+import { BASEURL } from "../../config";
 import "./Cart.css"
 interface CartItem {
   id: number;
@@ -239,4 +239,5 @@ const Cart = () => {
 };
 
 export default Cart;
+
 
