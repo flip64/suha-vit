@@ -13,7 +13,8 @@ interface CartItem {
   quantity: number;
   price: number;
   total_price: number;
-  image?: string | null; // ✅ اضافه شد
+  image?: string | null;
+  updating?: boolean; // برای نمایش loading هنگام آپدیت تعداد
 }
 
 const Cart = () => {
@@ -23,9 +24,7 @@ const Cart = () => {
 
   // 📦 گرفتن سبد خرید
   const fetchCart = async () => {
-    console.log("📡 [API] GET Cart");
-    console.log("Token:", token);
-
+    setLoading(true);
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
@@ -33,17 +32,11 @@ const Cart = () => {
           Authorization: token ? `Bearer ${token}` : "",
         },
       });
+      const data = await res.json();
+      console.log("Cart data:", data);
 
-      console.log("Status:", res.status);
-      console.log("Status Text:", res.statusText);
-
-      const text = await res.text();
-      console.log("Raw Response:", text);
-
-      const data = JSON.parse(text);
-      console.log("Parsed Data:", data);
-
-      setCart(data.items || []);
+      const cartItems = data.items ? data.items : Array.isArray(data) ? data : [];
+      setCart(cartItems);
     } catch (err) {
       console.error("❌ GET Cart Error:", err);
     } finally {
@@ -57,7 +50,14 @@ const Cart = () => {
 
   // ✏️ بروزرسانی تعداد
   const updateCartItem = async (variant_id: number, quantity: number) => {
-    console.log(`📡 [PATCH] variant_id: ${variant_id}, quantity: ${quantity}`);
+    if (quantity < 1) return;
+
+    setCart(prev =>
+      prev.map(item =>
+        item.variant === variant_id ? { ...item, updating: true } : item
+      )
+    );
+
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "PATCH",
@@ -67,20 +67,40 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id, quantity }),
       });
+      const data = await res.json();
+      console.log("PATCH response:", data);
 
-      console.log("PATCH Status:", res.status);
-      const text = await res.text();
-      console.log("PATCH Raw Response:", text);
-
-      fetchCart();
+      // آپدیت محلی state
+      setCart(prev =>
+        prev.map(item =>
+          item.variant === variant_id
+            ? {
+                ...item,
+                quantity,
+                total_price: item.price * quantity,
+                updating: false,
+              }
+            : item
+        )
+      );
     } catch (err) {
       console.error("❌ PATCH Cart Error:", err);
+      setCart(prev =>
+        prev.map(item =>
+          item.variant === variant_id ? { ...item, updating: false } : item
+        )
+      );
     }
   };
 
   // 🗑️ حذف محصول
   const removeFromCart = async (variant_id: number) => {
-    console.log(`📡 [DELETE] variant_id: ${variant_id}`);
+    setCart(prev =>
+      prev.map(item =>
+        item.variant === variant_id ? { ...item, updating: true } : item
+      )
+    );
+
     try {
       const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "DELETE",
@@ -90,24 +110,21 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id }),
       });
+      const data = await res.json();
+      console.log("DELETE response:", data);
 
-      console.log("DELETE Status:", res.status);
-      const text = await res.text();
-      console.log("DELETE Raw Response:", text);
-
-      fetchCart();
+      setCart(prev => prev.filter(item => item.variant !== variant_id));
     } catch (err) {
       console.error("❌ DELETE Cart Error:", err);
+      setCart(prev =>
+        prev.map(item =>
+          item.variant === variant_id ? { ...item, updating: false } : item
+        )
+      );
     }
   };
 
-  const handleQuantityChange = (variant_id: number, value: number) => {
-    if (value > 0) {
-      updateCartItem(variant_id, value);
-    }
-  };
-
-  const total = cart?.reduce((acc, item) => acc + item.total_price, 0) || 0;
+  const total = cart.reduce((acc, item) => acc + (item.total_price || item.price * item.quantity), 0);
 
   return (
     <>
@@ -123,18 +140,18 @@ const Cart = () => {
                 ) : cart.length > 0 ? (
                   <table className="table mb-0 table-mobile-responsive">
                     <tbody>
-                      {cart.map((item) => (
-                        <tr key={item.id}>
+                      {cart.map(item => (
+                        <tr key={item.variant}>
                           <th scope="row">
                             <button
                               className="remove-product"
                               onClick={() => removeFromCart(item.variant)}
+                              disabled={item.updating}
                             >
                               ✖
                             </button>
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
-                            {/* ✅ تصویر محصول */}
                             {item.image && (
                               <img
                                 src={item.image}
@@ -155,27 +172,40 @@ const Cart = () => {
                               >
                                 {item.product_name}
                               </Link>
-                              <div className="cart-price-qty mt-1">
-                                <span>
-                                  {item.price.toLocaleString()} تومان ×{" "}
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    value={item.quantity}
-                                    onChange={(e) =>
-                                      handleQuantityChange(
-                                        item.variant,
-                                        Number(e.target.value) || 1
-                                      )
-                                    }
-                                    className="qty-input"
-                                  />
-                                </span>
+                              <div className="cart-price-qty mt-1 d-flex align-items-center gap-2">
+                                <button
+                                  className="qty-btn"
+                                  onClick={() =>
+                                    updateCartItem(item.variant, item.quantity - 1)
+                                  }
+                                  disabled={item.quantity <= 1 || item.updating}
+                                >
+                                  −
+                                </button>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={item.quantity}
+                                  onChange={e =>
+                                    updateCartItem(item.variant, Number(e.target.value) || 1)
+                                  }
+                                  className="qty-input"
+                                  disabled={item.updating}
+                                />
+                                <button
+                                  className="qty-btn"
+                                  onClick={() =>
+                                    updateCartItem(item.variant, item.quantity + 1)
+                                  }
+                                  disabled={item.updating}
+                                >
+                                  +
+                                </button>
                               </div>
                             </div>
                           </td>
                           <td className="cart-total-price">
-                            {item.total_price.toLocaleString()} تومان
+                            {item.updating ? "..." : (item.total_price || item.price * item.quantity).toLocaleString()} تومان
                           </td>
                         </tr>
                       ))}
