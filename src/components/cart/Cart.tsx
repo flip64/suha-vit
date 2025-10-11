@@ -23,13 +23,27 @@ const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // تابع fetch ساده بدون Authorization و credentials
-  const fetchJSON = async (url: string) => {
-    console.log("🌍 Fetch start:", url);
+  // Fetch با JWT و لاگ کامل
+  const fetchCart = async () => {
+    console.log("🛒 Fetching cart data...");
+    setLoading(true);
+
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("⚠️ No JWT token found in localStorage");
+        setCart([]);
+        setLoading(false);
+        return;
+      }
+
+      const url = `${BASEURL}/api/orders/cart/`;
+      console.log("🌍 Fetch start:", url);
+
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -38,32 +52,20 @@ const Cart = () => {
       if (!res.ok) {
         const text = await res.text();
         console.error("❌ Response not OK:", text);
-        throw new Error(text || `Request failed with status ${res.status}`);
-      }
-
-      const data = await res.json();
-      console.log("✅ Response JSON:", data);
-      return data;
-    } catch (error: any) {
-      console.error("🚨 Fetch failed:", error);
-      return null;
-    }
-  };
-
-  const fetchCart = async () => {
-    console.log("🛒 Fetching cart data...");
-    setLoading(true);
-    try {
-      const url = `${BASEURL}/api/orders/cart/`;
-      const data = await fetchJSON(url);
-
-      if (!data) {
-        console.error("❌ No data received");
         setCart([]);
         return;
       }
 
-      const cartItems: CartItem[] = (data.items || []).map((item: any) => {
+      const data = await res.json();
+      console.log("✅ Response JSON:", data);
+
+      if (!data.items || !Array.isArray(data.items)) {
+        console.warn("⚠️ No items in cart response");
+        setCart([]);
+        return;
+      }
+
+      const cartItems: CartItem[] = data.items.map((item: any) => {
         let productName = "";
         let attributes = "";
 
@@ -84,7 +86,7 @@ const Cart = () => {
 
       setCart(cartItems);
     } catch (err) {
-      console.error("❌ GET Cart Error:", err);
+      console.error("🚨 GET Cart Error:", err);
       setCart([]);
     } finally {
       setLoading(false);
@@ -95,6 +97,20 @@ const Cart = () => {
   useEffect(() => {
     fetchCart();
   }, []);
+
+  const updateQuantity = (variant: number, qty: number) => {
+    setCart(prev =>
+      prev.map(item =>
+        item.variant === variant ? { ...item, quantity: qty } : item
+      )
+    );
+    console.log(`🔄 Updated quantity of variant ${variant} to ${qty}`);
+  };
+
+  const removeItem = (variant: number) => {
+    setCart(prev => prev.filter(item => item.variant !== variant));
+    console.log(`🗑️ Removed variant ${variant} from cart`);
+  };
 
   const total = cart.reduce(
     (acc, item) => acc + (item.total_price || item.price * item.quantity),
@@ -119,7 +135,7 @@ const Cart = () => {
                           <th scope="row">
                             <button
                               className="remove-product"
-                              onClick={() => console.log("🗑️ حذف محصول:", item.variant)}
+                              onClick={() => removeItem(item.variant)}
                             >
                               ✖
                             </button>
@@ -141,7 +157,9 @@ const Cart = () => {
                                   min={1}
                                   value={item.quantity}
                                   className="qty-input"
-                                  disabled={item.updating}
+                                  onChange={e =>
+                                    updateQuantity(item.variant, parseInt(e.target.value))
+                                  }
                                 />
                               </div>
                             </div>
