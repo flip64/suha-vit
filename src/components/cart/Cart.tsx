@@ -29,7 +29,7 @@ const Cart = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const tokens = localStorage.getItem("tokenes");
       if (!token) {
         console.warn("⚠️ No JWT token found in localStorage");
         setCart([]);
@@ -43,7 +43,7 @@ const Cart = () => {
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokenes}`,
         },
       });
 
@@ -198,3 +198,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
