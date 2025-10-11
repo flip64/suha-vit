@@ -15,82 +15,54 @@ interface CartItem {
   price: number;
   total_price: number;
   image?: string | null;
-  updating?: boolean;
-  attributes?: string;
 }
 
 const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
 
-  // Fetch با JWT و لاگ کامل
   const fetchCart = async () => {
-    console.log("🛒 Fetching cart data...");
     setLoading(true);
-
     try {
-      const tokens = localStorage.getItem("tokenes");
+      const token = localStorage.getItem("tokenes");
       if (!token) {
-        console.warn("⚠️ No JWT token found in localStorage");
         setCart([]);
+        setTotal(0);
         setLoading(false);
         return;
       }
 
-      const url = `${BASEURL}/api/orders/cart/`;
-      console.log("🌍 Fetch start:", url);
-
-      const res = await fetch(url, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenes}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log("📡 Response status:", res.status);
-
       if (!res.ok) {
-        const text = await res.text();
-        console.error("❌ Response not OK:", text);
         setCart([]);
+        setTotal(0);
+        setLoading(false);
         return;
       }
 
       const data = await res.json();
-      console.log("✅ Response JSON:", data);
-
       if (!data.items || !Array.isArray(data.items)) {
-        console.warn("⚠️ No items in cart response");
         setCart([]);
+        setTotal(0);
+        setLoading(false);
         return;
       }
 
-      const cartItems: CartItem[] = data.items.map((item: any) => {
-        let productName = "";
-        let attributes = "";
-
-        if (typeof item.product_name === "string") {
-          productName = item.product_name;
-        } else if (item.product_name?.product) {
-          productName = item.product_name.product.name || "بدون نام";
-          if (item.product_name.attributes?.length) {
-            attributes = item.product_name.attributes.map((a: any) => a.value).join(" ");
-          }
-        }
-
-        return {
-          ...item,
-          product_name: `${productName} ${attributes}`.trim(),
-        };
-      });
-
-      setCart(cartItems);
+      setCart(data.items);
+      setTotal(data.total_price);
     } catch (err) {
-      console.error("🚨 GET Cart Error:", err);
+      console.error("GET Cart Error:", err);
       setCart([]);
+      setTotal(0);
     } finally {
       setLoading(false);
-      console.log("⏹️ Fetch cart finished");
     }
   };
 
@@ -98,24 +70,43 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  const updateQuantity = (variant: number, qty: number) => {
+  const updateQuantity = async (variant: number, qty: number) => {
     setCart(prev =>
-      prev.map(item =>
-        item.variant === variant ? { ...item, quantity: qty } : item
-      )
+      prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
     );
-    console.log(`🔄 Updated quantity of variant ${variant} to ${qty}`);
+
+    const token = localStorage.getItem("tokenes");
+    if (!token) return;
+
+    await fetch(`${BASEURL}/api/orders/cart/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ variant_id: variant, quantity: qty }),
+    });
+
+    fetchCart(); // refresh
   };
 
-  const removeItem = (variant: number) => {
+  const removeItem = async (variant: number) => {
     setCart(prev => prev.filter(item => item.variant !== variant));
-    console.log(`🗑️ Removed variant ${variant} from cart`);
-  };
 
-  const total = cart.reduce(
-    (acc, item) => acc + (item.total_price || item.price * item.quantity),
-    0
-  );
+    const token = localStorage.getItem("tokenes");
+    if (!token) return;
+
+    await fetch(`${BASEURL}/api/orders/cart/`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ variant_id: variant }),
+    });
+
+    fetchCart(); // refresh
+  };
 
   return (
     <>
@@ -141,9 +132,7 @@ const Cart = () => {
                             </button>
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
-                            {item.image && (
-                              <img src={item.image} alt={item.product_name} />
-                            )}
+                            {item.image && <img src={item.image} alt={item.product_name} />}
                             <div>
                               <Link
                                 className="product-title"
@@ -165,7 +154,7 @@ const Cart = () => {
                             </div>
                           </td>
                           <td className="cart-total-price">
-                            {(item.total_price || item.price * item.quantity).toLocaleString()} تومان
+                            {item.total_price.toLocaleString()} تومان
                           </td>
                         </tr>
                       ))}
@@ -198,4 +187,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
