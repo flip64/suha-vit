@@ -27,6 +27,7 @@ const Cart = () => {
     try {
       const token = localStorage.getItem("tokenes");
       if (!token) {
+        console.warn("⚠️ No JWT token found");
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -41,6 +42,7 @@ const Cart = () => {
       });
 
       if (!res.ok) {
+        console.error("❌ Cart fetch failed", res.status);
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -48,17 +50,29 @@ const Cart = () => {
       }
 
       const data = await res.json();
+
       if (!data.items || !Array.isArray(data.items)) {
+        console.warn("⚠️ No items in cart response");
         setCart([]);
         setTotal(0);
         setLoading(false);
         return;
       }
 
-      setCart(data.items);
-      setTotal(data.total_price);
+      const cartItems: CartItem[] = data.items.map((item: any) => ({
+        id: item.id,
+        variant: item.variant,
+        product_name: item.product_name || "بدون نام",
+        quantity: item.quantity,
+        price: Number(item.price),
+        total_price: Number(item.total_price),
+        image: item.image || "",
+      }));
+
+      setCart(cartItems);
+      setTotal(Number(data.total_price) || 0);
     } catch (err) {
-      console.error("GET Cart Error:", err);
+      console.error("🚨 GET Cart Error:", err);
       setCart([]);
       setTotal(0);
     } finally {
@@ -78,16 +92,19 @@ const Cart = () => {
     const token = localStorage.getItem("tokenes");
     if (!token) return;
 
-    await fetch(`${BASEURL}/api/orders/cart/`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ variant_id: variant, quantity: qty }),
-    });
-
-    fetchCart(); // refresh
+    try {
+      await fetch(`${BASEURL}/api/orders/cart/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ variant_id: variant, quantity: qty }),
+      });
+      fetchCart(); // refresh after update
+    } catch (err) {
+      console.error("🚨 Update Cart Error:", err);
+    }
   };
 
   const removeItem = async (variant: number) => {
@@ -96,16 +113,19 @@ const Cart = () => {
     const token = localStorage.getItem("tokenes");
     if (!token) return;
 
-    await fetch(`${BASEURL}/api/orders/cart/`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ variant_id: variant }),
-    });
-
-    fetchCart(); // refresh
+    try {
+      await fetch(`${BASEURL}/api/orders/cart/`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ variant_id: variant }),
+      });
+      fetchCart(); // refresh after removal
+    } catch (err) {
+      console.error("🚨 Remove Cart Item Error:", err);
+    }
   };
 
   return (
@@ -134,10 +154,7 @@ const Cart = () => {
                           <td className="cart-product-info d-flex align-items-center">
                             {item.image && <img src={item.image} alt={item.product_name} />}
                             <div>
-                              <Link
-                                className="product-title"
-                                to={`/product/${item.variant}`}
-                              >
+                              <Link className="product-title" to={`/product/${item.variant}`}>
                                 {item.product_name}
                               </Link>
                               <div className="cart-price-qty mt-1 d-flex align-items-center">
