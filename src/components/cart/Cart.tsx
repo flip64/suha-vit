@@ -23,26 +23,27 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  const log = (...args: any[]) => console.log("[Cart]", ...args);
+
+  // =========================
   // دریافت سبد خرید
+  // =========================
   const fetchCart = async () => {
     setLoading(true);
+    log("Fetching cart...");
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        setCart([]);
-        setTotal(0);
-        setLoading(false);
-        return;
-      }
+      log("JWT Token:", token);
 
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, { headers });
+      log("Response status:", res.status);
 
       if (!res.ok) {
+        const text = await res.text();
+        log("Response text on error:", text);
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -50,8 +51,10 @@ const Cart = () => {
       }
 
       const data = await res.json();
+      log("Cart data received:", data);
 
       if (!data.items || !Array.isArray(data.items)) {
+        log("No items array found in response");
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -71,8 +74,9 @@ const Cart = () => {
 
       setCart(cartItems);
       setTotal(Number(data.total_price) || 0);
+      log("Cart items set:", cartItems, "Total:", total);
     } catch (err) {
-      console.error("GET Cart Error:", err);
+      log("🚨 GET Cart Error:", err);
       setCart([]);
       setTotal(0);
     } finally {
@@ -84,17 +88,23 @@ const Cart = () => {
     fetchCart();
   }, []);
 
+  // =========================
   // بروزرسانی تعداد آیتم
+  // =========================
   const updateQuantity = async (variant: number, qty: number) => {
+    log(`Updating quantity: variant=${variant}, qty=${qty}`);
     setCart(prev =>
       prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
     );
 
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      log("No token, cannot update cart");
+      return;
+    }
 
     try {
-      await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -102,21 +112,32 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant, quantity: qty }),
       });
+      log("PATCH response status:", res.status);
+
+      const text = await res.text();
+      log("PATCH response text:", text);
+
       fetchCart();
     } catch (err) {
-      console.error("Update Cart Error:", err);
+      log("🚨 Update Cart Error:", err);
     }
   };
 
+  // =========================
   // حذف آیتم
+  // =========================
   const removeItem = async (variant: number) => {
+    log(`Removing item: variant=${variant}`);
     setCart(prev => prev.filter(item => item.variant !== variant));
 
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      log("No token, cannot remove item");
+      return;
+    }
 
     try {
-      await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -124,9 +145,14 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant }),
       });
+      log("DELETE response status:", res.status);
+
+      const text = await res.text();
+      log("DELETE response text:", text);
+
       fetchCart();
     } catch (err) {
-      console.error("Remove Cart Item Error:", err);
+      log("🚨 Remove Cart Item Error:", err);
     }
   };
 
@@ -177,11 +203,15 @@ const Cart = () => {
                                     )
                                   }
                                 />
-                                <span className="ms-2">{item.price.toLocaleString()} تومان</span>
+                                <span className="ms-2">
+                                  {item.price.toLocaleString()} تومان
+                                </span>
                               </div>
                             </div>
                           </td>
-                          <td className="text-end">{item.total_price.toLocaleString()} تومان</td>
+                          <td className="text-end">
+                            {item.total_price.toLocaleString()} تومان
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -207,4 +237,4 @@ const Cart = () => {
   );
 };
 
-export default Cart; 
+export default Cart;
