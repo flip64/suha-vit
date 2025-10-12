@@ -1,1 +1,1 @@
-export const BASEURL = "https://backend.bazbia.ir"; // آدرس پیش‌فرض بک‌اند
+export const BASEURL = "http://localhost:8000/"; // آدرس پیش‌فرض بک‌اند
