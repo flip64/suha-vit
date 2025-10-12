@@ -29,7 +29,7 @@ const Cart = () => {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("accessToken");
       console.log("🔑 توکن کاربر:", token);
 
       if (!token) {
@@ -252,3 +252,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
