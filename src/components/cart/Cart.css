@@ -1,48 +1,65 @@
+/* کارت سبد خرید */
+.cart-wrapper-area {
+  padding: 20px 0;
+}
+
+.cart-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
+
+.cart-table th,
+.cart-table td {
+  vertical-align: middle;
+  padding: 12px;
+}
+
 /* عکس محصول */
 .cart-table img {
   width: 60px;
   height: 60px;
   object-fit: cover;
   border-radius: 8px;
-  margin:20px; /* فاصله بیشتر بین عکس و متن */
+  margin-right: 20px; /* فاصله بین عکس و متن */
 }
 
 /* دکمه‌های + و - */
 .qty-btn {
-  width: 26px;   /* کوچکتر و جمع‌وجور */
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border: 1px solid #ccc;
   background: #f0f0f0;
   cursor: pointer;
   font-weight: bold;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: background 0.2s, transform 0.1s;
 }
 
 .qty-btn:hover:not(:disabled) {
   background: #e0e0e0;
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 /* input تعداد */
 .qty-input {
-  width: 36px;       /* کوچک و جمع‌وجور */
-  height: 26px;      /* هماهنگ با دکمه‌ها */
+  width: 40px;
+  height: 28px;
   text-align: center;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 0 4px;
-  margin: 0 6px;     /* فاصله مناسب از دکمه‌ها */
-  font-size: 0.85rem; /* فونت کوچکتر و زیبا */
+  margin: 0 6px;
+  font-size: 0.9rem;
   background: #fff;
   color: #333;
 }
 
-/* کانتینر تعداد برای فاصله مناسب بین عناصر */
+/* کانتینر تعداد */
 .cart-price-qty {
   display: flex;
   align-items: center;
-  gap: 2px; /* فاصله کوچک بین دکمه‌ها و input */
+  gap: 4px;
 }
 
 /* دکمه حذف محصول */
@@ -50,17 +67,71 @@
   background: transparent;
   border: none;
   color: #ff4d4f;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.1s;
 }
 
 .remove-product:hover {
   color: #ff0000;
+  transform: scale(1.1);
 }
 
 /* مجموع قیمت */
 .total-price {
   font-weight: bold;
   font-size: 1.2rem;
+}
+
+/* کارت جمع کل */
+.cart-summary {
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  padding: 20px;
+  text-align: right;
+}
+
+.cart-summary h5 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* دکمه ادامه خرید */
+.cart-summary .btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.cart-summary .btn-primary:hover {
+  background-color: #0069d9;
+  transform: scale(1.02);
+}
+
+/* ریسپانسیو موبایل */
+@media (max-width: 768px) {
+  .cart-table img {
+    margin-right: 10px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .qty-btn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .qty-input {
+    width: 32px;
+    height: 24px;
+  }
+
+  .cart-summary h5 {
+    font-size: 1.1rem;
+  }
 }
