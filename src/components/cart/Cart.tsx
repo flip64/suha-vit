@@ -12,77 +12,33 @@ interface CartItem {
   variant: number;
   product_slug: string;
   product_name: string;
-  variant_name?: string;
   quantity: number;
   price: number;
   total_price: number;
   image?: string | null;
 }
 
-// 🧮 کامپوننت تعداد با دکمه + و -
-interface QuantityInputProps {
-  value: number;
-  onChange: (newValue: number) => void;
-  min?: number;
-}
-
-const QuantityInput = ({ value, onChange, min = 1 }: QuantityInputProps) => {
-  return (
-    <div className="quantity-input d-flex align-items-center">
-      <button
-        type="button"
-        className="btn-decrement"
-        onClick={() => onChange(Math.max(value - 1, min))}
-      >
-        -
-      </button>
-      <input
-        type="number"
-        value={value}
-        min={min}
-        onChange={e => onChange(Math.max(parseInt(e.target.value) || min, min))}
-      />
-      <button
-        type="button"
-        className="btn-increment"
-        onClick={() => onChange(value + 1)}
-      >
-        +
-      </button>
-    </div>
-  );
-};
-
 const Cart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  // 🔑 دریافت توکن
   const getToken = () => localStorage.getItem("accessToken");
 
+  // 🛰️ دریافت سبد خرید از سرور
   const fetchCart = async () => {
-    console.log("🛰️ شروع دریافت سبد خرید از سرور...");
     setLoading(true);
-
     try {
       const token = getToken();
-      const url = `${BASEURL}/api/orders/cart/`;
-      const headers: any = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(url, { headers });
-      if (!res.ok) {
-        setCart([]);
-        setTotal(0);
-        return;
-      }
-
+      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      if (!res.ok) throw new Error("خطا در دریافت سبد");
       const data = await res.json();
-      if (!data.items || !Array.isArray(data.items)) {
-        setCart([]);
-        setTotal(0);
-        return;
-      }
 
       const cartItems: CartItem[] = data.items.map((item: any) => ({
         id: item.id,
@@ -98,6 +54,7 @@ const Cart = () => {
       setCart(cartItems);
       setTotal(Number(data.total_price) || 0);
     } catch (err) {
+      console.error(err);
       setCart([]);
       setTotal(0);
     } finally {
@@ -109,49 +66,58 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  const updateQuantity = async (variant: number, qty: number) => {
-    setCart(prev =>
-      prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
-    );
-
+  // ➕ افزودن آیتم به سبد
+  const addToCart = async (variant: number, quantity = 1) => {
     const token = getToken();
     if (!token) return;
 
-    try {
-      const url = `${BASEURL}/api/orders/cart/item/${variant}/update/`;
-      await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ quantity: qty, variant_id: variant }),
-      });
-      await fetchCart();
-    } catch (err) {
-      console.error(err);
-    }
+    await fetch(`${BASEURL}/api/orders/cart/add/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ variant_id: variant, quantity }),
+    });
+
+    await fetchCart();
   };
 
-  const removeItem = async (variant: number) => {
-    setCart(prev => prev.filter(item => item.variant !== variant));
-
+  // ✏️ بروزرسانی تعداد آیتم
+  const updateQuantity = async (variant: number, qty: number) => {
     const token = getToken();
     if (!token) return;
 
-    try {
-      const url = `${BASEURL}/api/orders/cart/item/${variant}/delete/`;
-      await fetch(url, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      await fetchCart();
-    } catch (err) {
-      console.error(err);
+    if (qty <= 0) {
+      // حذف آیتم اگر 0 شد
+      await removeItem(variant);
+      return;
     }
+
+    const existingItem = cart.find(c => c.variant === variant);
+    if (existingItem) {
+      // اگر آیتم هست → بروزرسانی
+      await fetch(`${BASEURL}/api/orders/cart/item/${variant}/update/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ variant_id: variant, quantity: qty }),
+      });
+    } else {
+      // اگر آیتم نیست → اضافه کردن
+      await addToCart(variant, qty);
+    }
+
+    await fetchCart();
+  };
+
+  // 🗑️ حذف آیتم
+  const removeItem = async (variant: number) => {
+    const token = getToken();
+    if (!token) return;
+
+    await fetch(`${BASEURL}/api/orders/cart/item/${variant}/delete/`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+
+    await fetchCart();
   };
 
   return (
@@ -170,29 +136,38 @@ const Cart = () => {
                       {cart.map(item => (
                         <tr key={item.variant}>
                           <th scope="row">
-                            <button
-                              className="remove-product"
-                              onClick={() => removeItem(item.variant)}
-                            >
+                            <button className="remove-product" onClick={() => removeItem(item.variant)}>
                               ✖
                             </button>
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
-                            {item.image && (
-                              <img src={item.image} alt={item.product_name} />
-                            )}
+                            {item.image && <img src={item.image} alt={item.product_name} />}
                             <div>
-                              <Link
-                                className="product-title"
-                                to={`/product/${item.product_slug}`}
-                              >
+                              <Link className="product-title" to={`/product/${item.product_slug}`}>
                                 {item.product_name}
                               </Link>
                               <div className="cart-price-qty mt-1 d-flex align-items-center">
-                                <QuantityInput
+                                <button
+                                  className="qty-btn"
+                                  onClick={() => updateQuantity(item.variant, item.quantity - 1)}
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min={1}
                                   value={item.quantity}
-                                  onChange={newQty => updateQuantity(item.variant, newQty)}
+                                  className="qty-input"
+                                  onChange={e =>
+                                    updateQuantity(item.variant, parseInt(e.target.value) || 1)
+                                  }
                                 />
+                                <button
+                                  className="qty-btn"
+                                  onClick={() => updateQuantity(item.variant, item.quantity + 1)}
+                                >
+                                  +
+                                </button>
                                 <span className="ms-2">{item.price.toLocaleString()} تومان</span>
                               </div>
                             </div>
