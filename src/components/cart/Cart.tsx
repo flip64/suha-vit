@@ -27,70 +27,44 @@ const Cart = () => {
   const getToken = () => localStorage.getItem("accessToken");
 
   // 🛰️ دریافت سبد خرید از سرور
-  // 🛰️ دریافت سبد خرید از سرور
-const fetchCart = async () => {
-  console.log("🛰️ شروع دریافت سبد خرید از سرور...");
-  setLoading(true);
+  const fetchCart = async () => {
+    console.log("🛰️ شروع دریافت سبد خرید از سرور...");
+    setLoading(true);
 
-  try {
-    const token = getToken();
-    console.log("🔑 توکن کاربر:", token);
+    try {
+      const token = getToken();
+      console.log("🔑 توکن کاربر:", token);
 
-    const url = `${BASEURL}/api/orders/cart/`;
-    const headers: any = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+      const url = `${BASEURL}/api/orders/cart/`;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(url, { headers });
-    console.log("📥 پاسخ سرور (status):", res.status);
+      const res = await fetch(url, { headers });
+      console.log("📥 پاسخ سرور (status):", res.status);
 
-    if (!res.ok) {
-      console.error("❌ خطا در پاسخ GET سبد خرید:", res.status, res.statusText);
-      setCart([]);
-      setTotal(0);
-      return;
-    }
+      if (!res.ok) {
+        console.error("❌ خطا در پاسخ GET سبد خرید:", res.status, res.statusText);
+        setCart([]);
+        setTotal(0);
+        return;
+      }
 
-    const data = await res.json();
-    console.log("✅ داده دریافتی از سرور:", data);
+      const data = await res.json();
+      console.log("✅ داده دریافتی از سرور:", data);
 
-    if (!data.items || !Array.isArray(data.items)) {
-      console.warn("⚠️ ساختار داده نامعتبر:", data);
-      setCart([]);
-      setTotal(0);
-      return;
-    }
+      if (!data.items || !Array.isArray(data.items)) {
+        console.warn("⚠️ ساختار داده نامعتبر:", data);
+        setCart([]);
+        setTotal(0);
+        return;
+      }
 
-    // 🔧 تطبیق ساختار واقعی داده
-    const cartItems: CartItem[] = data.items.map((item: any) => ({
-      id: item.id,
-      variant: item.variant,
-      product_slug: item.variant?.toString(), // چون slug نداری فعلاً همینه
-      product_name: item.variant_name || "بدون نام",
-      quantity: item.quantity,
-      price: Number(item.price),
-      total_price: Number(item.total_price),
-      image: item.image || null,
-    }));
-
-    console.log("🧾 آیتم‌های نهایی سبد:", cartItems);
-
-    setCart(cartItems);
-    setTotal(Number(data.total_price) || 0);
-  } catch (err) {
-    console.error("💥 خطا در fetchCart:", err);
-    setCart([]);
-    setTotal(0);
-  } finally {
-    console.log("🏁 پایان fetchCart");
-    setLoading(false);
-  }
-};
-
+      // 🔧 تطبیق ساختار واقعی داده سرور
       const cartItems: CartItem[] = data.items.map((item: any) => ({
         id: item.id,
         variant: item.variant,
-        product_slug: item.product_slug || item.variant?.toString(),
-        product_name: item.product_name || "بدون نام",
+        product_slug: item.variant?.toString(), // چون slug نداری فعلاً همینه
+        product_name: item.variant_name || "بدون نام",
         quantity: item.quantity,
         price: Number(item.price),
         total_price: Number(item.total_price),
@@ -122,7 +96,7 @@ const fetchCart = async () => {
 
     try {
       const url = `${BASEURL}/api/orders/cart/add/`;
-      console.log(`لینک = ${url}`)
+      console.log(`لینک = ${url}`);
       const headers: any = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -236,14 +210,14 @@ const fetchCart = async () => {
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
                             {item.image && (
-                              <img src={item.image} alt={item.variant_name} />
+                              <img src={item.image} alt={item.product_name} />
                             )}
                             <div>
                               <Link
                                 className="product-title"
                                 to={`/product/${item.product_slug}`}
                               >
-                                {item.variant_name}
+                                {item.product_name}
                               </Link>
                               <div className="cart-price-qty mt-1 d-flex align-items-center">
                                 <input
@@ -289,6 +263,3 @@ const fetchCart = async () => {
 };
 
 export default Cart;
-
-
-
