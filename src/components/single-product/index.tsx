@@ -22,6 +22,9 @@ const SingleProductIndex = () => {
 
   const token = localStorage.getItem("accessToken");
 
+  // -------------------------------
+  // دریافت محصول
+  // -------------------------------
   useEffect(() => {
     if (!slug) {
       setLoading(false);
@@ -37,8 +40,6 @@ const SingleProductIndex = () => {
         setLoading(true);
         setError(null);
 
-        console.log("📡 [API] GET Product", `${BASEURL}/api/products/${slug}/`);
-
         const res = await fetch(`${BASEURL}/api/products/${slug}/`, {
           signal,
           headers: { "Content-Type": "application/json" },
@@ -50,8 +51,6 @@ const SingleProductIndex = () => {
         }
 
         const data = await res.json();
-        console.log("✅ [API] Response GET Product:", data);
-
         setProduct(data);
         setQuantity(1);
       } catch (err: any) {
@@ -70,24 +69,34 @@ const SingleProductIndex = () => {
     };
   }, [slug]);
 
+  // -------------------------------
+  // افزودن محصول به سبد خرید
+  // -------------------------------
   const handleAddToCart = async () => {
     if (!product) return;
+
+    // بررسی موجودی (اگر backend موجودی دارد)
     if (quantity > product.quantity) {
       alert(`حداکثر موجودی محصول ${product.quantity} عدد است.`);
       return;
     }
 
-    // 🔹 تغییر کلید به variant_id مطابق با سرور
+    // انتخاب واریانت محصول (فرض می‌کنیم اولین واریانت)
+    const variantId = product.variants?.[0]?.id;
+    if (!variantId) {
+      alert("واریانت محصول پیدا نشد.");
+      return;
+    }
+
     const cartItem = {
-      variant_id: product.id,
+      variant_id: variantId,
       quantity,
     };
 
     try {
       setAdding(true);
-      console.log("📡 [API] POST Cart", `${BASEURL}/api/orders/cart/`, cartItem);
 
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+      const res = await fetch(`${BASEURL}/api/cart/add/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +106,6 @@ const SingleProductIndex = () => {
       });
 
       const data = await res.json().catch(() => ({}));
-      console.log("📝 Server Response:", data);
 
       if (!res.ok) throw new Error(data.message || "خطا در افزودن محصول به سبد خرید");
 
@@ -112,7 +120,7 @@ const SingleProductIndex = () => {
 
   const increaseQuantity = () => {
     if (!product) return;
-    setQuantity((prev) => Math.min(prev + 1, product.quantity));
+    setQuantity((prev) => Math.min(prev + 1, product.quantity || 999));
   };
 
   const decreaseQuantity = () => {
@@ -163,22 +171,18 @@ const SingleProductIndex = () => {
                 <div className="quantity-selector">
                   <label>تعداد:</label>
                   <div className="quantity-controls">
-                    <button onClick={decreaseQuantity} className="quantity-btn">
-                      -
-                    </button>
+                    <button onClick={decreaseQuantity} className="quantity-btn">-</button>
                     <span className="quantity-value">{quantity}</span>
-                    <button onClick={increaseQuantity} className="quantity-btn">
-                      +
-                    </button>
+                    <button onClick={increaseQuantity} className="quantity-btn">+</button>
                   </div>
                 </div>
 
                 <button
                   onClick={handleAddToCart}
                   className="add-to-cart-btn"
-                  disabled={!product.quantity || adding}
+                  disabled={adding || !product.variants?.length}
                 >
-                  {adding ? "در حال افزودن..." : product.quantity ? "افزودن به سبد خرید" : "ناموجود"}
+                  {adding ? "در حال افزودن..." : "افزودن به سبد خرید"}
                 </button>
               </div>
             </div>
