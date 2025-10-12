@@ -23,40 +23,29 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  // ✅ دریافت سبد خرید از سرور
+  // 🔑 دریافت توکن از localStorage
+  const getToken = () => localStorage.getItem("accessToken");
+
+  // 🛰️ دریافت سبد خرید از سرور
   const fetchCart = async () => {
     console.log("🛰️ شروع دریافت سبد خرید از سرور...");
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = getToken();
       console.log("🔑 توکن کاربر:", token);
 
-      if (!token) {
-        console.log("⚠️ کاربر مهمان است، سبد خرید خالی می‌ماند.");
-        setCart([]);
-        setTotal(0);
-        setLoading(false);
-        return;
-      }
-
       const url = `${BASEURL}/api/orders/cart/`;
-      console.log("📡 ارسال GET به:", url);
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await fetch(url, { headers });
       console.log("📥 پاسخ سرور (status):", res.status);
 
       if (!res.ok) {
         console.error("❌ خطا در پاسخ GET سبد خرید:", res.status, res.statusText);
         setCart([]);
         setTotal(0);
-        setLoading(false);
         return;
       }
 
@@ -67,7 +56,6 @@ const Cart = () => {
         console.warn("⚠️ ساختار داده نامعتبر:", data);
         setCart([]);
         setTotal(0);
-        setLoading(false);
         return;
       }
 
@@ -100,37 +88,62 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // ✅ بروزرسانی تعداد آیتم
+  // ➕ افزودن آیتم به سبد
+  const addToCart = async (variant: number, quantity = 1) => {
+    console.log(`➕ افزودن variant=${variant} تعداد=${quantity} به سبد`);
+    const token = getToken();
+
+    try {
+      const url = `${BASEURL}/api/orders/cart/add/`;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ variant_id: variant, quantity }),
+      });
+
+      console.log("📥 پاسخ POST addToCart:", res.status, res.statusText);
+
+      if (!res.ok) {
+        console.error("❌ خطا در افزودن محصول:", await res.text());
+      }
+
+      await fetchCart();
+    } catch (err) {
+      console.error("💥 خطا در addToCart:", err);
+    }
+  };
+
+  // ✏️ بروزرسانی تعداد آیتم
   const updateQuantity = async (variant: number, qty: number) => {
-    console.log(`✏️ درخواست بروزرسانی آیتم variant=${variant} به تعداد ${qty}`);
+    console.log(`✏️ بروزرسانی variant=${variant} تعداد=${qty}`);
     setCart(prev =>
       prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
     );
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) {
       console.warn("⚠️ بروزرسانی بدون توکن انجام نمی‌شود.");
       return;
     }
 
     try {
-      const url = `${BASEURL}/api/orders/cart/`;
-      console.log("📡 ارسال PATCH به:", url);
+      const url = `${BASEURL}/api/orders/cart/item/${variant}/update/`;
 
       const res = await fetch(url, {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ variant_id: variant, quantity: qty }),
+        body: JSON.stringify({ quantity: qty, variant_id: variant }),
       });
 
-      console.log("📥 پاسخ PATCH:", res.status, res.statusText);
+      console.log("📥 پاسخ PUT updateQuantity:", res.status, res.statusText);
 
-      if (!res.ok) {
-        console.error("❌ خطا در بروزرسانی تعداد:", await res.text());
-      }
+      if (!res.ok) console.error("❌ خطا در بروزرسانی:", await res.text());
 
       await fetchCart();
     } catch (err) {
@@ -138,20 +151,19 @@ const Cart = () => {
     }
   };
 
-  // ✅ حذف آیتم از سبد
+  // 🗑️ حذف آیتم
   const removeItem = async (variant: number) => {
-    console.log(`🗑️ حذف آیتم با variant=${variant}`);
+    console.log(`🗑️ حذف variant=${variant}`);
     setCart(prev => prev.filter(item => item.variant !== variant));
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (!token) {
       console.warn("⚠️ حذف بدون توکن انجام نمی‌شود.");
       return;
     }
 
     try {
-      const url = `${BASEURL}/api/orders/cart/`;
-      console.log("📡 ارسال DELETE به:", url);
+      const url = `${BASEURL}/api/orders/cart/item/${variant}/delete/`;
 
       const res = await fetch(url, {
         method: "DELETE",
@@ -159,14 +171,11 @@ const Cart = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ variant_id: variant }),
       });
 
-      console.log("📥 پاسخ DELETE:", res.status, res.statusText);
+      console.log("📥 پاسخ DELETE removeItem:", res.status, res.statusText);
 
-      if (!res.ok) {
-        console.error("❌ خطا در حذف آیتم:", await res.text());
-      }
+      if (!res.ok) console.error("❌ خطا در حذف آیتم:", await res.text());
 
       await fetchCart();
     } catch (err) {
@@ -252,4 +261,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
