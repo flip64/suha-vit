@@ -23,27 +23,37 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  const log = (...args: any[]) => console.log("[Cart]", ...args);
-
-  // =========================
-  // دریافت سبد خرید
-  // =========================
+  // ✅ دریافت سبد خرید از سرور
   const fetchCart = async () => {
+    console.log("🛰️ شروع دریافت سبد خرید از سرور...");
     setLoading(true);
-    log("Fetching cart...");
+
     try {
       const token = localStorage.getItem("token");
-      log("JWT Token:", token);
+      console.log("🔑 توکن کاربر:", token);
 
-      const headers: any = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
+      if (!token) {
+        console.log("⚠️ کاربر مهمان است، سبد خرید خالی می‌ماند.");
+        setCart([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
 
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, { headers });
-      log("Response status:", res.status);
+      const url = `${BASEURL}/api/orders/cart/`;
+      console.log("📡 ارسال GET به:", url);
+
+      const res = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("📥 پاسخ سرور (status):", res.status);
 
       if (!res.ok) {
-        const text = await res.text();
-        log("Response text on error:", text);
+        console.error("❌ خطا در پاسخ GET سبد خرید:", res.status, res.statusText);
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -51,10 +61,10 @@ const Cart = () => {
       }
 
       const data = await res.json();
-      log("Cart data received:", data);
+      console.log("✅ داده دریافتی از سرور:", data);
 
       if (!data.items || !Array.isArray(data.items)) {
-        log("No items array found in response");
+        console.warn("⚠️ ساختار داده نامعتبر:", data);
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -64,7 +74,7 @@ const Cart = () => {
       const cartItems: CartItem[] = data.items.map((item: any) => ({
         id: item.id,
         variant: item.variant,
-        product_slug: item.product_slug || item.variant.toString(),
+        product_slug: item.product_slug || item.variant?.toString(),
         product_name: item.product_name || "بدون نام",
         quantity: item.quantity,
         price: Number(item.price),
@@ -72,14 +82,16 @@ const Cart = () => {
         image: item.image || null,
       }));
 
+      console.log("🧾 آیتم‌های نهایی سبد:", cartItems);
+
       setCart(cartItems);
       setTotal(Number(data.total_price) || 0);
-      log("Cart items set:", cartItems, "Total:", total);
     } catch (err) {
-      log("🚨 GET Cart Error:", err);
+      console.error("💥 خطا در fetchCart:", err);
       setCart([]);
       setTotal(0);
     } finally {
+      console.log("🏁 پایان fetchCart");
       setLoading(false);
     }
   };
@@ -88,23 +100,24 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // =========================
-  // بروزرسانی تعداد آیتم
-  // =========================
+  // ✅ بروزرسانی تعداد آیتم
   const updateQuantity = async (variant: number, qty: number) => {
-    log(`Updating quantity: variant=${variant}, qty=${qty}`);
+    console.log(`✏️ درخواست بروزرسانی آیتم variant=${variant} به تعداد ${qty}`);
     setCart(prev =>
       prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
     );
 
     const token = localStorage.getItem("token");
     if (!token) {
-      log("No token, cannot update cart");
+      console.warn("⚠️ بروزرسانی بدون توکن انجام نمی‌شود.");
       return;
     }
 
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+      const url = `${BASEURL}/api/orders/cart/`;
+      console.log("📡 ارسال PATCH به:", url);
+
+      const res = await fetch(url, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -112,32 +125,35 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant, quantity: qty }),
       });
-      log("PATCH response status:", res.status);
 
-      const text = await res.text();
-      log("PATCH response text:", text);
+      console.log("📥 پاسخ PATCH:", res.status, res.statusText);
 
-      fetchCart();
+      if (!res.ok) {
+        console.error("❌ خطا در بروزرسانی تعداد:", await res.text());
+      }
+
+      await fetchCart();
     } catch (err) {
-      log("🚨 Update Cart Error:", err);
+      console.error("💥 خطا در updateQuantity:", err);
     }
   };
 
-  // =========================
-  // حذف آیتم
-  // =========================
+  // ✅ حذف آیتم از سبد
   const removeItem = async (variant: number) => {
-    log(`Removing item: variant=${variant}`);
+    console.log(`🗑️ حذف آیتم با variant=${variant}`);
     setCart(prev => prev.filter(item => item.variant !== variant));
 
     const token = localStorage.getItem("token");
     if (!token) {
-      log("No token, cannot remove item");
+      console.warn("⚠️ حذف بدون توکن انجام نمی‌شود.");
       return;
     }
 
     try {
-      const res = await fetch(`${BASEURL}/api/orders/cart/`, {
+      const url = `${BASEURL}/api/orders/cart/`;
+      console.log("📡 ارسال DELETE به:", url);
+
+      const res = await fetch(url, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -145,14 +161,16 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant }),
       });
-      log("DELETE response status:", res.status);
 
-      const text = await res.text();
-      log("DELETE response text:", text);
+      console.log("📥 پاسخ DELETE:", res.status, res.statusText);
 
-      fetchCart();
+      if (!res.ok) {
+        console.error("❌ خطا در حذف آیتم:", await res.text());
+      }
+
+      await fetchCart();
     } catch (err) {
-      log("🚨 Remove Cart Item Error:", err);
+      console.error("💥 خطا در removeItem:", err);
     }
   };
 
@@ -203,15 +221,11 @@ const Cart = () => {
                                     )
                                   }
                                 />
-                                <span className="ms-2">
-                                  {item.price.toLocaleString()} تومان
-                                </span>
+                                <span className="ms-2">{item.price.toLocaleString()} تومان</span>
                               </div>
                             </div>
                           </td>
-                          <td className="text-end">
-                            {item.total_price.toLocaleString()} تومان
-                          </td>
+                          <td className="text-end">{item.total_price.toLocaleString()} تومان</td>
                         </tr>
                       ))}
                     </tbody>
