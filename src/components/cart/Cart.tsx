@@ -12,6 +12,7 @@ interface CartItem {
   variant: number;
   product_slug: string;
   product_name: string;
+  variant_name?: string; // ✅ اضافه شد
   quantity: number;
   price: number;
   total_price: number;
@@ -263,3 +264,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
