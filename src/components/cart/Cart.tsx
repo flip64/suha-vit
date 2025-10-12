@@ -23,9 +23,12 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  // 🔑 دریافت توکن
   const getToken = () => localStorage.getItem("accessToken");
 
+  // 🛰️ دریافت سبد خرید از سرور
   const fetchCart = async () => {
+    console.log("🛰️ fetchCart شروع شد");
     setLoading(true);
     try {
       const token = getToken();
@@ -35,8 +38,10 @@ const Cart = () => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
+      console.log("📥 fetchCart status:", res.status);
       if (!res.ok) throw new Error("خطا در دریافت سبد");
       const data = await res.json();
+      console.log("📥 fetchCart data:", data);
 
       const cartItems: CartItem[] = data.items.map((item: any) => ({
         id: item.id,
@@ -52,7 +57,7 @@ const Cart = () => {
       setCart(cartItems);
       setTotal(Number(data.total_price) || 0);
     } catch (err) {
-      console.error(err);
+      console.error("💥 fetchCart error:", err);
       setCart([]);
       setTotal(0);
     } finally {
@@ -64,47 +69,84 @@ const Cart = () => {
     fetchCart();
   }, []);
 
+  // ➕ افزودن آیتم به سبد
   const addToCart = async (variant: number, quantity = 1) => {
+    console.log(`➕ addToCart: variant=${variant}, quantity=${quantity}`);
     const token = getToken();
     if (!token) return;
 
-    await fetch(`${BASEURL}/api/orders/cart/add/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ variant_id: variant, quantity }),
-    });
+    try {
+      const res = await fetch(`${BASEURL}/api/orders/cart/add/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ variant_id: variant, quantity }),
+      });
+      console.log("📥 addToCart status:", res.status);
+      const data = await res.json().catch(() => ({}));
+      console.log("📥 addToCart data:", data);
+      if (!res.ok) throw new Error(data.message || "خطا در افزودن محصول به سبد");
 
-    await fetchCart();
-  };
-
-  const updateQuantity = async (variant: number, qty: number) => {
-    const token = getToken();
-    if (!token) return;
-
-    if (qty <= 0) {
-      await removeItem(variant);
-      return;
+      await fetchCart();
+    } catch (err) {
+      console.error("💥 addToCart error:", err);
     }
-
-    await fetch(`${BASEURL}/api/orders/cart/item/${variant}/update/`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ variant_id: variant, quantity: qty }),
-    });
-
-    await fetchCart();
   };
 
-  const removeItem = async (variant: number) => {
+  // ✏️ بروزرسانی تعداد آیتم
+  const updateQuantity = async (variant: number, qty: number) => {
+    console.log(`✏️ updateQuantity: variant=${variant}, qty=${qty}`);
     const token = getToken();
     if (!token) return;
 
-    await fetch(`${BASEURL}/api/orders/cart/item/${variant}/delete/`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    });
+    try {
+      const existingItem = cart.find(c => c.variant === variant);
+      if (!existingItem) {
+        console.log("⚠️ آیتم در سبد نیست، addToCart انجام می‌شود");
+        await addToCart(variant, qty);
+        return;
+      }
 
-    await fetchCart();
+      if (qty <= 0) {
+        console.log("🗑️ quantity=0 → removeItem");
+        await removeItem(variant);
+        return;
+      }
+
+      const res = await fetch(`${BASEURL}/api/orders/cart/item/${variant}/update/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ quantity: qty }),
+      });
+      console.log("📥 updateQuantity status:", res.status);
+      const data = await res.json().catch(() => ({}));
+      console.log("📥 updateQuantity data:", data);
+      if (!res.ok) throw new Error(data.message || "خطا در بروزرسانی تعداد");
+
+      await fetchCart();
+    } catch (err) {
+      console.error("💥 updateQuantity error:", err);
+    }
+  };
+
+  // 🗑️ حذف آیتم
+  const removeItem = async (variant: number) => {
+    console.log(`🗑️ removeItem: variant=${variant}`);
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${BASEURL}/api/orders/cart/item/${variant}/delete/`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      });
+      console.log("📥 removeItem status:", res.status);
+      const data = await res.json().catch(() => ({}));
+      console.log("📥 removeItem data:", data);
+
+      await fetchCart();
+    } catch (err) {
+      console.error("💥 removeItem error:", err);
+    }
   };
 
   return (
@@ -145,9 +187,7 @@ const Cart = () => {
                                   min={1}
                                   value={item.quantity}
                                   className="qty-input"
-                                  onChange={e =>
-                                    updateQuantity(item.variant, parseInt(e.target.value) || 1)
-                                  }
+                                  onChange={e => updateQuantity(item.variant, parseInt(e.target.value) || 1)}
                                 />
                                 <button
                                   className="qty-btn"
