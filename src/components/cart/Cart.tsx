@@ -23,10 +23,8 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  // 🔑 دریافت توکن
   const getToken = () => localStorage.getItem("accessToken");
 
-  // 🛰️ دریافت سبد خرید از سرور
   const fetchCart = async () => {
     setLoading(true);
     try {
@@ -66,7 +64,6 @@ const Cart = () => {
     fetchCart();
   }, []);
 
-  // ➕ افزودن آیتم به سبد
   const addToCart = async (variant: number, quantity = 1) => {
     const token = getToken();
     if (!token) return;
@@ -80,34 +77,24 @@ const Cart = () => {
     await fetchCart();
   };
 
-  // ✏️ بروزرسانی تعداد آیتم
   const updateQuantity = async (variant: number, qty: number) => {
     const token = getToken();
     if (!token) return;
 
     if (qty <= 0) {
-      // حذف آیتم اگر 0 شد
       await removeItem(variant);
       return;
     }
 
-    const existingItem = cart.find(c => c.variant === variant);
-    if (existingItem) {
-      // اگر آیتم هست → بروزرسانی
-      await fetch(`${BASEURL}/api/orders/cart/item/${variant}/update/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ variant_id: variant, quantity: qty }),
-      });
-    } else {
-      // اگر آیتم نیست → اضافه کردن
-      await addToCart(variant, qty);
-    }
+    await fetch(`${BASEURL}/api/orders/cart/item/${variant}/update/`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ variant_id: variant, quantity: qty }),
+    });
 
     await fetchCart();
   };
 
-  // 🗑️ حذف آیتم
   const removeItem = async (variant: number) => {
     const token = getToken();
     if (!token) return;
