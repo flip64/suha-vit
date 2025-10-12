@@ -95,6 +95,7 @@ const Cart = () => {
 
     try {
       const url = `${BASEURL}/api/orders/cart/add/`;
+      console.log(`لینک = ${url}`)
       const headers: any = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -261,3 +262,4 @@ const Cart = () => {
 };
 
 export default Cart;
+
