@@ -209,14 +209,14 @@ const Cart = () => {
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
                             {item.image && (
-                              <img src={item.image} alt={item.product_name} />
+                              <img src={item.image} alt={item.variant_name} />
                             )}
                             <div>
                               <Link
                                 className="product-title"
                                 to={`/product/${item.product_slug}`}
                               >
-                                {item.product_name}
+                                {item.variant_name}
                               </Link>
                               <div className="cart-price-qty mt-1 d-flex align-items-center">
                                 <input
@@ -262,4 +262,5 @@ const Cart = () => {
 };
 
 export default Cart;
+
 
