@@ -96,7 +96,7 @@ const SingleProductIndex = () => {
     try {
       setAdding(true);
 
-      const res = await fetch(`${BASEURL}/api/cart/add/`, {
+      const res = await fetch(`${BASEURL}/api/orders/cart/add/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -198,3 +198,4 @@ const SingleProductIndex = () => {
 };
 
 export default SingleProductIndex;
+
