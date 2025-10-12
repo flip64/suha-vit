@@ -10,6 +10,7 @@ import "./Cart.css";
 interface CartItem {
   id: number;
   variant: number;
+  product_slug: string;
   product_name: string;
   quantity: number;
   price: number;
@@ -22,12 +23,12 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  // دریافت سبد خرید
   const fetchCart = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("tokenes");
+      const token = localStorage.getItem("token");
       if (!token) {
-        console.warn("⚠️ No JWT token found");
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -42,7 +43,6 @@ const Cart = () => {
       });
 
       if (!res.ok) {
-        console.error("❌ Cart fetch failed", res.status);
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -52,7 +52,6 @@ const Cart = () => {
       const data = await res.json();
 
       if (!data.items || !Array.isArray(data.items)) {
-        console.warn("⚠️ No items in cart response");
         setCart([]);
         setTotal(0);
         setLoading(false);
@@ -62,17 +61,18 @@ const Cart = () => {
       const cartItems: CartItem[] = data.items.map((item: any) => ({
         id: item.id,
         variant: item.variant,
+        product_slug: item.product_slug || item.variant.toString(),
         product_name: item.product_name || "بدون نام",
         quantity: item.quantity,
         price: Number(item.price),
         total_price: Number(item.total_price),
-        image: item.image || "",
+        image: item.image || null,
       }));
 
       setCart(cartItems);
       setTotal(Number(data.total_price) || 0);
     } catch (err) {
-      console.error("🚨 GET Cart Error:", err);
+      console.error("GET Cart Error:", err);
       setCart([]);
       setTotal(0);
     } finally {
@@ -84,12 +84,13 @@ const Cart = () => {
     fetchCart();
   }, []);
 
+  // بروزرسانی تعداد آیتم
   const updateQuantity = async (variant: number, qty: number) => {
     setCart(prev =>
       prev.map(item => (item.variant === variant ? { ...item, quantity: qty } : item))
     );
 
-    const token = localStorage.getItem("tokenes");
+    const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
@@ -101,16 +102,17 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant, quantity: qty }),
       });
-      fetchCart(); // refresh after update
+      fetchCart();
     } catch (err) {
-      console.error("🚨 Update Cart Error:", err);
+      console.error("Update Cart Error:", err);
     }
   };
 
+  // حذف آیتم
   const removeItem = async (variant: number) => {
     setCart(prev => prev.filter(item => item.variant !== variant));
 
-    const token = localStorage.getItem("tokenes");
+    const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
@@ -122,9 +124,9 @@ const Cart = () => {
         },
         body: JSON.stringify({ variant_id: variant }),
       });
-      fetchCart(); // refresh after removal
+      fetchCart();
     } catch (err) {
-      console.error("🚨 Remove Cart Item Error:", err);
+      console.error("Remove Cart Item Error:", err);
     }
   };
 
@@ -152,9 +154,14 @@ const Cart = () => {
                             </button>
                           </th>
                           <td className="cart-product-info d-flex align-items-center">
-                            {item.image && <img src={item.image} alt={item.product_name} />}
+                            {item.image && (
+                              <img src={item.image} alt={item.product_name} />
+                            )}
                             <div>
-                              <Link className="product-title" to={`/product/${item.variant}`}>
+                              <Link
+                                className="product-title"
+                                to={`/product/${item.product_slug}`}
+                              >
                                 {item.product_name}
                               </Link>
                               <div className="cart-price-qty mt-1 d-flex align-items-center">
@@ -164,35 +171,32 @@ const Cart = () => {
                                   value={item.quantity}
                                   className="qty-input"
                                   onChange={e =>
-                                    updateQuantity(item.variant, parseInt(e.target.value))
+                                    updateQuantity(
+                                      item.variant,
+                                      parseInt(e.target.value) || 1
+                                    )
                                   }
                                 />
+                                <span className="ms-2">{item.price.toLocaleString()} تومان</span>
                               </div>
                             </div>
                           </td>
-                          <td className="cart-total-price">
-                            {item.total_price.toLocaleString()} تومان
-                          </td>
+                          <td className="text-end">{item.total_price.toLocaleString()} تومان</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <p className="text-center">سبد خرید خالی است</p>
+                  <p className="text-center">سبد خرید شما خالی است.</p>
                 )}
               </div>
             </div>
-
             {cart.length > 0 && (
-              <div className="card cart-amount-area">
-                <div className="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-                  <h5 className="total-price mb-3 mb-md-0">
-                    مجموع: {total.toLocaleString()} تومان
-                  </h5>
-                  <Link className="btn btn-primary" to="/checkout">
-                    پرداخت
-                  </Link>
-                </div>
+              <div className="cart-summary card p-3">
+                <h5>جمع کل: {total.toLocaleString()} تومان</h5>
+                <Link to="/checkout" className="btn btn-primary mt-3">
+                  ادامه خرید
+                </Link>
               </div>
             )}
           </div>
@@ -203,4 +207,4 @@ const Cart = () => {
   );
 };
 
-export default Cart;
+export default Cart; 
