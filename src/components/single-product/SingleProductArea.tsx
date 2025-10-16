@@ -17,6 +17,15 @@ interface ProductImage {
   is_main?: boolean;
 }
 
+interface Variant {
+  id: number;
+  sku?: string;
+  price?: string | number;
+  discount_price?: string | number;
+  stock?: number;
+  [key: string]: any;
+}
+
 interface Product {
   id: number;
   slug: string;
@@ -26,7 +35,7 @@ interface Product {
   category?: any;
   tags?: string[];
   specifications?: Specification[];
-  variants?: any[];
+  variants?: Variant[];
   images?: ProductImage[];
   videos?: any[];
   is_active?: boolean;
@@ -44,10 +53,16 @@ interface SingleProductAreaProps {
 
 const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) => {
   const [quantity, setQuantity] = useState(1);
-  const increment = () => setQuantity(quantity + 1);
-  const decrement = () => quantity > 1 && setQuantity(quantity - 1);
-
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
+
+  const increment = () => setQuantity((prev) => prev + 1);
+  const decrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
+
+  // ✅ موجودی و قیمت از واریانت اصلی (اولین واریانت)
+  const mainVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+  const stock = mainVariant?.stock ?? 0;
+  const price = mainVariant?.discount_price || mainVariant?.price || product.base_price;
+  const isAvailable = stock > 0;
 
   return (
     <>
@@ -56,36 +71,54 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
           <h3>{product.name}</h3>
           <p>{product.description || "توضیحی برای این محصول ثبت نشده است."}</p>
 
-          <p className="sale-price">
-            {Number(product.base_price).toLocaleString("fa-IR")} تومان
-          </p>
+          {/* ✅ نمایش قیمت فقط اگر موجودی > 0 */}
+          {isAvailable ? (
+            <p className="sale-price">
+              {Number(price).toLocaleString("fa-IR")} تومان
+            </p>
+          ) : (
+            <p className="text-danger fw-bold">عدم موجودی</p>
+          )}
 
-          <div className="quantity-control d-flex align-items-center">
-            <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
-            <span className="px-2">{quantity}</span>
-            <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
+          {/* ✅ کنترل تعداد فقط وقتی موجود باشد */}
+          {isAvailable && (
+            <div className="quantity-control d-flex align-items-center">
+              <button className="btn btn-sm btn-outline-secondary" onClick={decrement}>-</button>
+              <span className="px-2">{quantity}</span>
+              <button className="btn btn-sm btn-outline-secondary" onClick={increment}>+</button>
+            </div>
+          )}
+
+          {/* ✅ دکمه افزودن یا پیام عدم موجودی */}
+          <div className="mt-3">
+            {isAvailable ? (
+              <button className="btn btn-primary btn-sm">
+                افزودن به سبد خرید
+              </button>
+            ) : (
+              <button className="btn btn-secondary btn-sm" disabled>
+                عدم موجودی
+              </button>
+            )}
           </div>
         </div>
 
         {/* مشخصات فنی */}
-        ‌‌
-        
-{product.specifications && product.specifications.length > 0 && (
-  <div className="container mt-4">
-    <h5 className="mb-3">مشخصات فنی</h5>
-    <div className="row g-2">
-      {product.specifications.map((spec, index) => (
-        <div key={index} className="col-6 col-md-4">
-          <div className="p-3 bg-light rounded shadow-sm h-100">
-            <p className="fw-bold mb-1 text-dark">{spec.name}</p>
-            <p className="text-muted small mb-0">{spec.value}</p>
+        {product.specifications && product.specifications.length > 0 && (
+          <div className="container mt-4">
+            <h5 className="mb-3">مشخصات فنی</h5>
+            <div className="row g-2">
+              {product.specifications.map((spec, index) => (
+                <div key={index} className="col-6 col-md-4">
+                  <div className="p-3 bg-light rounded shadow-sm h-100">
+                    <p className="fw-bold mb-1 text-dark">{spec.name}</p>
+                    <p className="text-muted small mb-0">{spec.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-        
+        )}
 
         {/* تگ‌ها */}
         {product.tags && product.tags.length > 0 && (
@@ -104,80 +137,6 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
             </div>
           </div>
         )}
-
-        {/* محصولات مرتبط */}
-        {related.length > 0 && (
-          <div className="related-product-wrapper bg-white py-3 mb-3">
-            <div className="container">
-              <div className="section-heading d-flex align-items-center justify-content-between rtl-flex-d-row-r">
-                <h6>Related Products</h6>
-                <Link className="btn btn-sm btn-secondary" to="/shop-grid">
-                  View all
-                </Link>
-              </div>
-
-              <Swiper
-                loop
-                spaceBetween={10}
-                autoplay={{ delay: 2500, disableOnInteraction: false }}
-                modules={[Autoplay]}
-                breakpoints={{
-                  640: { slidesPerView: 2 },
-                  768: { slidesPerView: 3 },
-                  1024: { slidesPerView: 4 },
-                }}
-                className="related-product-slide"
-              >
-                {related.map((item) => (
-                  <SwiperSlide key={item.slug} className="col-6 col-md-4">
-                    <div className="card product-card">
-                      <div className="card-body">
-                        <button className="wishlist-btn">
-                          <i className="ti ti-heart"></i>
-                        </button>
-
-                        <Link className="product-thumbnail d-block" to={`/single-product/${item.slug}`}>
-                          {item.images?.[0]?.image && (
-                            <img
-                              className="mb-2"
-                              src={item.images[0].image}
-                              alt={item.name}
-                            />
-                          )}
-                        </Link>
-
-                        <Link className="product-title" to={`/single-product/${item.slug}`}>
-                          {item.name}
-                        </Link>
-
-                        <p className="sale-price">
-                          {Number(item.base_price).toLocaleString("fa-IR")} تومان
-                        </p>
-
-                        <div className="product-rating">
-                          <i className="ti ti-star-filled"></i>
-                          <i className="ti ti-star-filled"></i>
-                          <i className="ti ti-star-filled"></i>
-                          <i className="ti ti-star-filled"></i>
-                          <i className="ti ti-star-filled"></i>
-                        </div>
-                        <button className="btn btn-primary btn-sm">
-                          <i className="ti ti-plus"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </div>
-        )}
-
-        {/* بخش Reviews */}
-        <div className="container">
-          <h5>Reviews</h5>
-          <p>بخش نظرات محصول اینجاست...</p>
-        </div>
       </div>
 
       {/* Video modal */}
@@ -191,4 +150,3 @@ const SingleProductArea = ({ product, related = [] }: SingleProductAreaProps) =>
 };
 
 export default SingleProductArea;
-
