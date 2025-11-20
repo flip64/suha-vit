@@ -1,1 +1,1 @@
-export const BASEURL = "https://react.bazbia.ir"; // آدرس پیش‌فرض بک‌اند
+export const BASEURL = "https://backend.bazbia.ir"; // آدرس پیش‌فرض بک‌اند
